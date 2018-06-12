@@ -1,17 +1,30 @@
 package domo_gopher
 
 import (
-	"testing"
 	"github.com/bmizerany/assert"
+	"github.com/joho/godotenv"
+	"log"
+	"os"
+	"testing"
 )
+
+var clientID string
+var clientSecret string
+var domo Domo
 
 // Create out api variables for easy access
-const (
-	clientID = "domo client id"
-	clientSecret = "domo client secret"
-)
-
-var domo = New(clientID, clientSecret)
+func TestMain(m *testing.M) {
+	err := godotenv.Load("../.env")
+	if err != nil {
+		log.Fatal("Error Loading .env file")
+	}
+	clientID = os.Getenv("DOMO_CLIENT_ID")
+	clientSecret = os.Getenv("DOMO_SECRET")
+	domo = New(clientID, clientSecret)
+	domo.Authorize()
+	runTests := m.Run()
+	os.Exit(runTests)
+}
 
 // Should create a new Domo object.
 func TestNew(t *testing.T) {
@@ -21,7 +34,7 @@ func TestNew(t *testing.T) {
 
 // Should create a new Domo obj.
 func TestDomo_Authorize(t *testing.T) {
-	result, err := domo.Authorize();
+	result, err := domo.Authorize()
 	assert.T(t, result, "should be true")
 	assert.T(t, len(err) == 0, "should be nil")
 	assert.T(t, len(domo.accessToken) > 0, "should not be nil")
@@ -29,7 +42,7 @@ func TestDomo_Authorize(t *testing.T) {
 
 // Should create a new Domo obj.
 func TestDomo_Request(t *testing.T) {
-	result, err := domo.Request("GET", "datasets/%s", nil, nil);
+	result, err := domo.Request("GET", "datasets/%s", nil, "77faea51-68ab-4dd3-ae1a-8992bc1b58a8")
 	assert.T(t, result != nil, "Shouldn't be null")
 	assert.T(t, err == nil, "Should be null")
 }
@@ -43,7 +56,7 @@ func TestDomo_Get(t *testing.T) {
 
 // Should create a new Domo obj.
 func TestGetEncodedKeys(t *testing.T) {
-	result := domo.getEncodedKeys();
+	result := domo.getEncodedKeys()
 	assert.T(t, len(result) > 0, "shouldn't be null")
 }
 
@@ -55,6 +68,6 @@ func TestUnauthorizedResponse(t *testing.T) {
 
 // Should create a new Domo obj.
 func TestCreateURL(t *testing.T) {
-	result := domo.createTargetURL("datasets");
+	result := domo.createTargetURL("datasets")
 	assert.T(t, result == "https://api.domo.com/v1/datasets", "should be same URL")
 }

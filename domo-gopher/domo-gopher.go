@@ -4,25 +4,25 @@
 package domo_gopher
 
 import (
-	"fmt"
-	"github.com/parnurzeal/gorequest"
-	simplejson "github.com/bitly/go-simplejson"
-	"errors"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
+	"fmt"
+	simplejson "github.com/bitly/go-simplejson"
+	"github.com/parnurzeal/gorequest"
 )
 
 // Domo struct to wrap our req ops.
 type Domo struct {
-	clientID string
+	clientID     string
 	clientSecret string
-	accessToken string
+	accessToken  string
 }
 
 const (
-	BASE_URL = "https://api.domo.com"
+	BASE_URL           = "https://api.domo.com"
 	AUTHENTICATION_URL = "https://api.domo.com/oauth/token" // TODO: scope
-	API_VERSION = "v1"
+	API_VERSION        = "v1"
 )
 
 // Creates a new Domo API object with the
@@ -50,7 +50,7 @@ func (domo *Domo) Authorize() (bool, []error) {
 	request := gorequest.New()
 	request.Post(AUTHENTICATION_URL)
 	request.Set("Authorization", auth)
-	request.Send("grant_type=client_credentials?scope=data")
+	request.Send("grant_type=client_credentials&scope=data")
 
 	_, body, errs := request.End()
 
@@ -135,7 +135,6 @@ func (domo *Domo) Delete(format string, data map[string]interface{}, args ...int
 	return domo.Request("DELETE", format, data, args...)
 }
 
-
 // Creates a new Request to Domo and returns
 // the res as a map[string]interface{}.
 //
@@ -219,7 +218,7 @@ func unauthorizedResonse(body []byte) bool {
 
 // Creates target URL for making a Domo Request
 // to a given endpoint
-func(domo *Domo) createTargetURL(endpoint string) string {
+func (domo *Domo) createTargetURL(endpoint string) string {
 	result := fmt.Sprintf("%s/%s/%s", BASE_URL, API_VERSION, endpoint)
 	return result
 }

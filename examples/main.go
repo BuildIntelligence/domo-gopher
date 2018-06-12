@@ -3,13 +3,24 @@ package main
 
 import (
 	domoGopher "../domo-gopher"
-	"github.com/bitly/go-simplejson"
 	"fmt"
+	"github.com/bitly/go-simplejson"
+	"github.com/joho/godotenv"
+	"log"
+	"os"
 )
+
 func main() {
 
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	clientID := os.Getenv("DOMO_CLIENT_ID")
+	clientSecret := os.Getenv("DOMO_SECRET")
 	// Create a new domo obj
-	domo := domoGopher.New("clientID","clientSecret")
+	domo := domoGopher.New(clientID, clientSecret)
 
 	// Authorize against Domo
 	authorized, _ := domo.Authorize()
@@ -31,4 +42,3 @@ func main() {
 
 	}
 }
-
