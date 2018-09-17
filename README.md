@@ -1,5 +1,4 @@
 # Getting Started
-- The `domo-gopher` directory is an old implementation and will be removed going forward
 - Create a .env file (example contents below) with values for Domo client auth in the root directory for the tests to work. (i.e. same directory as this README.md file)
 ```
 # Domo Environment
