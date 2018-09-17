@@ -2,23 +2,26 @@
 package main
 
 import (
-	domoGopher "../domo-gopher"
 	"fmt"
-	"github.com/bitly/go-simplejson"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
+
+	domodomo ".."
+	domoGopher "../domo-gopher"
+	"github.com/bitly/go-simplejson"
+	"github.com/joho/godotenv"
 )
 
 func main() {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading .env file, make sure you've created one in the same directory as main.go")
 	}
 
 	clientID := os.Getenv("DOMO_CLIENT_ID")
 	clientSecret := os.Getenv("DOMO_SECRET")
+	// Start of original Domo-Gopher
 	// Create a new domo obj
 	domo := domoGopher.New(clientID, clientSecret)
 
@@ -40,5 +43,19 @@ func main() {
 			fmt.Println("Didn't work :(")
 		}
 
+	}
+	// End of original domo-gopher
+
+	// New Domo Package V2
+	auth := domodomo.NewAuthenticator(domodomo.ScopeData)
+	auth.SetAuthInfo(clientID, clientSecret)
+	client := auth.NewClient()
+	data, err := client.GetDatasets(5, 0)
+	if err != nil {
+		fmt.Println("error domo dataset")
+	}
+	for _, ds := range data {
+		out := fmt.Sprintf("DomoDomo Dataset name: %s, ID: %s", ds.Name, ds.ID)
+		fmt.Println(out)
 	}
 }
