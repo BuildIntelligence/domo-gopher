@@ -1,2 +1,6 @@
-/.idea
-/.vs
+/.idea/
+/.vs/
+/.vscode/
+*.iml
+.env
+/.gtm/
