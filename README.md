@@ -12,9 +12,9 @@ DASHBOARD_SCOPE=true
 
 # TODO:
 - [] improve README
-- [] improve auth scope configuration to include scope in the url auth params based on input flags
-- [] Dataset API wrapper methods
-- [] Stream API wrapper methods
+- [x] improve auth scope configuration to include scope in the url auth params based on input flags
+- [x] Dataset API wrapper methods
+- [x] Stream API wrapper methods
 - [] User API wrapper methods
 - [] Group API wrapper methods
 - [] Page API wrapper methods
