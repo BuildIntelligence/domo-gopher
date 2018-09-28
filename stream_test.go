@@ -2,7 +2,6 @@ package domo
 
 import (
 	"net/http"
-	"reflect"
 	"testing"
 )
 
@@ -43,363 +42,452 @@ func Test_GetStreamDetailsBadID(t *testing.T) {
 	}
 }
 
-func TestClient_CreateNewStream(t *testing.T) {
+func Test_ListStreams(t *testing.T) {
 	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
-	}
-	type args struct {
-		schema StreamDatasetSchema
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *StreamDataset
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			got, err := c.CreateNewStream(tt.args.schema)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.CreateNewStream() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.CreateNewStream() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestClient_GetStreamDetails(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
-	}
-	type args struct {
-		streamID int
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *StreamDataset
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			got, err := c.GetStreamDetails(tt.args.streamID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.GetStreamDetails() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.GetStreamDetails() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestClient_ListStreams(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+		code     int
+		filename string
 	}
 	type args struct {
 		limit  int
 		offset int
 	}
 	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []*StreamDataset
+		name   string
+		fields fields
+		args   args
+		// want    []StreamDataset
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{name: "Test List Streams", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_streams.json"}, args: args{limit: 1, offset: 0}, wantErr: false},
+		{name: "Test List Streams", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_streams.json"}, args: args{limit: 3, offset: 0}, wantErr: false},
+		{name: "Test List Streams", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_streams.json"}, args: args{limit: 3, offset: 1}, wantErr: false},
+		{name: "Test List Streams max limit", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_streams.json"}, args: args{limit: 50, offset: 1}, wantErr: false},
+		{name: "Test List Streams over max limit", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_streams.json"}, args: args{limit: 950, offset: 1}, wantErr: false},
+		{name: "Test List Streams Fails", fields: fields{code: http.StatusBadRequest, filename: "test_data/streams/bad_req_list_streams.txt"}, args: args{limit: 3, offset: 1}, wantErr: true},
+		{name: "Test List Streams Fails offset out of bounds", fields: fields{code: http.StatusBadRequest, filename: "test_data/streams/bad_req_list_streams.txt"}, args: args{limit: 3, offset: 99999}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			got, err := c.ListStreams(tt.args.limit, tt.args.offset)
+
+			maxListSize := 50
+			client, server := testClientFile(tt.fields.code, tt.fields.filename)
+			defer server.Close()
+
+			streamList, err := client.ListStreams(tt.args.limit, tt.args.offset)
+			// Not expecting err
 			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.ListStreams() error = %v, wantErr %v", err, tt.wantErr)
-				return
+				t.Fatal(err)
 			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.ListStreams() = %v, want %v", got, tt.want)
+
+			// Expect err
+			if err != nil && tt.wantErr {
+				se, ok := err.(Error)
+				if !ok {
+					t.Error("Expected domo error, got", err)
+				}
+				if se.Status != tt.fields.code {
+					t.Errorf("Expected HTTP %d, got %d", tt.fields.code, se.Status)
+				}
+				if se.Message != "domo err msg" {
+					t.Error("Unexpected error message: ", se.Message)
+				}
+			}
+			// if streamList == nil {
+			// 	t.Fatal("Got nil Streams")
+			// }
+
+			// Over max limit doesn't return more than max limit.
+			if tt.args.limit > maxListSize && len(streamList) > maxListSize {
+				t.Errorf("Expected list returned to be lte %d, go list size %d", maxListSize, len(streamList))
+			}
+			if len(streamList) > tt.args.limit {
+				t.Errorf("expected lte streams than limit of %d, got %d ", tt.args.limit, len(streamList))
 			}
 		})
 	}
 }
 
-func TestClient_UpdateStreamMeta(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+func Test_DeleteStream(t *testing.T) {
+	client, server := testClientString(http.StatusOK, "")
+	defer server.Close()
+
+	err := client.DeleteStream(1)
+	if err != nil {
+		t.Fatal(err)
 	}
-	type args struct {
-		streamID      int
-		streamDataset StreamDataset
+}
+func Test_DeleteStreamBadID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	err := client.DeleteStream(0)
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *StreamDataset
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			got, err := c.UpdateStreamMeta(tt.args.streamID, tt.args.streamDataset)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.UpdateStreamMeta() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.UpdateStreamMeta() = %v, want %v", got, tt.want)
-			}
-		})
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+func Test_CreateStreamExecution(t *testing.T) {
+
+	filename := "test_data/streams/create_stream_execution.json"
+	client, server := testClientFile(http.StatusOK, filename)
+	defer server.Close()
+
+	res, err := client.CreateStreamExecution(42)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res == nil {
+		t.Fatal("Got nil Stream Details")
+	}
+	if res.ID != 1 {
+		t.Error("Got wrong stream execution id")
+	}
+}
+func Test_CreateStreamExecutionBadID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.CreateStreamExecution(0)
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
 	}
 }
 
-func TestClient_DeleteStream(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+func Test_CommitExecution(t *testing.T) {
+
+	filename := "test_data/streams/commit_stream_execution.json"
+	client, server := testClientFile(http.StatusOK, filename)
+	defer server.Close()
+
+	res, err := client.CommitExecution(42, 1)
+	if err != nil {
+		t.Fatal(err)
 	}
-	type args struct {
-		streamID int
+	if res == nil {
+		t.Fatal("Got nil Stream Details")
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+	if res.ID != 1 {
+		t.Error("Got wrong execution stream id")
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			if err := c.DeleteStream(tt.args.streamID); (err != nil) != tt.wantErr {
-				t.Errorf("Client.DeleteStream() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+}
+func Test_CommitExecutionBadStreamID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.CommitExecution(0, 0)
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+func Test_CommitExecutionBadExecutionID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.CommitExecution(0, 0)
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
 	}
 }
 
-func TestClient_CreateStreamExecution(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+func Test_CommitExecutionBadIDs(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.CommitExecution(0, 0)
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
 	}
-	type args struct {
-		streamID int
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *StreamExecution
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			got, err := c.CreateStreamExecution(tt.args.streamID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.CreateStreamExecution() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.CreateStreamExecution() = %v, want %v", got, tt.want)
-			}
-		})
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+func Test_AbortStreamExecution(t *testing.T) {
+
+	client, server := testClientString(http.StatusOK, "")
+	defer server.Close()
+
+	err := client.AbortStreamExecution(1, 1)
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+func Test_AbortStreamExecutionBadStreamID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	err := client.AbortStreamExecution(0, 0)
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+func Test_AbortStreamExecutionBadExecutionID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	err := client.AbortStreamExecution(0, 0)
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
 	}
 }
 
-func TestClient_ListStreamExecutions(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+func Test_AbortStreamExecutionBadIDs(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	err := client.AbortStreamExecution(0, 0)
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
 	}
-	type args struct {
-		streamID int
-		limit    int
-		offset   int
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    []*StreamExecution
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			got, err := c.ListStreamExecutions(tt.args.streamID, tt.args.limit, tt.args.offset)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.ListStreamExecutions() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.ListStreamExecutions() = %v, want %v", got, tt.want)
-			}
-		})
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
 	}
 }
 
-func TestClient_UploadDataPart(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+func Test_UploadDataPart(t *testing.T) {
+
+	filename := "test_data/streams/upload_data_part.json"
+	client, server := testClientFile(http.StatusOK, filename)
+	defer server.Close()
+
+	res, err := client.UploadDataPart(42, 1, 1, "csvData string")
+	if err != nil {
+		t.Fatal(err)
 	}
-	type args struct {
-		streamID    int
-		executionID int
-		partNumber  int
-		csvData     string
+	if res == nil {
+		t.Fatal("Got nil Stream Details")
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+	if res.ID != 1 {
+		t.Error("Got wrong stream")
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			if err := c.UploadDataPart(tt.args.streamID, tt.args.executionID, tt.args.partNumber, tt.args.csvData); (err != nil) != tt.wantErr {
-				t.Errorf("Client.UploadDataPart() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+}
+func Test_UploadDataPartBadStreamID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.UploadDataPart(0, 0, 0, "csvData string")
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+func Test_UploadDataPartBadExecutionID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.UploadDataPart(0, 0, 0, "csvData string")
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+func Test_UploadDataPartBadPartNumber(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.UploadDataPart(0, 0, 0, "csvData string")
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
 	}
 }
 
-func TestClient_CommitExecution(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+func Test_UpdateStreamMeta(t *testing.T) {
+
+	filename := "test_data/streams/update_stream.json"
+	client, server := testClientFile(http.StatusOK, filename)
+	defer server.Close()
+
+	res, err := client.UpdateStreamMeta(42, StreamDataset{})
+	if err != nil {
+		t.Fatal(err)
 	}
-	type args struct {
-		streamID    int
-		executionID int
+	if res == nil {
+		t.Fatal("Got nil Stream Details")
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    *StreamExecution
-		wantErr bool
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			got, err := c.CommitExecution(tt.args.streamID, tt.args.executionID)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Client.CommitExecution() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Client.CommitExecution() = %v, want %v", got, tt.want)
-			}
-		})
+	if res.ID != 42 {
+		t.Error("Got wrong stream")
 	}
 }
 
-func TestClient_AbortStreamExecution(t *testing.T) {
-	type fields struct {
-		http      *http.Client
-		baseURL   string
-		AutoRetry bool
+func Test_UpdateStreamMetaBadStreamID(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.UpdateStreamMeta(0, StreamDataset{})
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
 	}
-	type args struct {
-		streamID    int
-		executionID int
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
 	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr bool
-	}{
-		// TODO: Add test cases.
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &Client{
-				http:      tt.fields.http,
-				baseURL:   tt.fields.baseURL,
-				AutoRetry: tt.fields.AutoRetry,
-			}
-			if err := c.AbortStreamExecution(tt.args.streamID, tt.args.executionID); (err != nil) != tt.wantErr {
-				t.Errorf("Client.AbortStreamExecution() error = %v, wantErr %v", err, tt.wantErr)
-			}
-		})
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
 	}
+}
+
+func Test_CreateNewStreamBadSchema(t *testing.T) {
+
+	filename := "test_data/streams/bad_req_list_streams.txt"
+	client, server := testClientFile(http.StatusBadRequest, filename)
+	defer server.Close()
+
+	res, err := client.CreateNewStream(StreamDatasetSchema{})
+	if res != nil {
+		t.Error("Unexpected Stream Execution returned, expected nil")
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 400 {
+		t.Errorf("Expected HTTP 400, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+
+func Test_CreateNewStream(t *testing.T) {
+
+	filename := "test_data/streams/create_new_stream.json"
+	client, server := testClientFile(http.StatusOK, filename)
+	defer server.Close()
+
+	res, err := client.CreateNewStream(StreamDatasetSchema{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if res == nil {
+		t.Fatal("Got nil Stream Details")
+	}
+	if res.ID != 42 {
+		t.Error("Got wrong stream")
+	}
+}
+
+func Test_UploadDataPartBadCsvColumnTypes(t *testing.T) {
+	// bad LONG
+	// bad DATE
+	// bad DATETIME
+	// bad DOUBLE
+}
+func Test_UploadDataPartBadCsvColumnNumbers(t *testing.T) {
+	// more columns than schema
+	// less columns than schema
 }
