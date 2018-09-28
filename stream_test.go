@@ -6,6 +6,43 @@ import (
 	"testing"
 )
 
+func Test_GetStreamDetails(t *testing.T) {
+	client, server := testClientFile(http.StatusOK, "test_data/streams/get_stream_details.json")
+	defer server.Close()
+
+	streamInfo, err := client.GetStreamDetails(42)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if streamInfo == nil {
+		t.Fatal("Got nil Stream Details")
+	}
+	if streamInfo.ID != 42 {
+		t.Error("Got wrong stream")
+	}
+
+}
+
+func Test_GetStreamDetailsBadID(t *testing.T) {
+	client, server := testClientString(http.StatusNotFound, `{"error": { "status": 404, "message": "domo err msg"}}`)
+	defer server.Close()
+
+	streamInfo, err := client.GetStreamDetails(0)
+	if streamInfo != nil {
+		t.Fatal("Expected nil stream, got", streamInfo.ID)
+	}
+	se, ok := err.(Error)
+	if !ok {
+		t.Error("Expected domo error, got", err)
+	}
+	if se.Status != 404 {
+		t.Errorf("Expected HTTP 404, got %d. ", se.Status)
+	}
+	if se.Message != "domo err msg" {
+		t.Error("Unexpected error message: ", se.Message)
+	}
+}
+
 func TestClient_CreateNewStream(t *testing.T) {
 	type fields struct {
 		http      *http.Client
