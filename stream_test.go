@@ -107,6 +107,71 @@ func Test_ListStreams(t *testing.T) {
 	}
 }
 
+func Test_ListStreamExecutions(t *testing.T) {
+	type fields struct {
+		code     int
+		filename string
+	}
+	type args struct {
+		streamID int
+		limit    int
+		offset   int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		// want    []StreamDataset
+		wantErr bool
+	}{
+		{name: "Test List Stream Executions", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_stream_executions.json"}, args: args{streamID: 1, limit: 1, offset: 0}, wantErr: false},
+		{name: "Test List Stream Executions", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_stream_executions.json"}, args: args{streamID: 1, limit: 3, offset: 0}, wantErr: false},
+		{name: "Test List Stream Executions", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_stream_executions.json"}, args: args{streamID: 1, limit: 3, offset: 1}, wantErr: false},
+		{name: "Test List Stream Executions max limit", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_stream_executions.json"}, args: args{streamID: 1, limit: 50, offset: 1}, wantErr: false},
+		{name: "Test List Stream Executions over max limit", fields: fields{code: http.StatusOK, filename: "test_data/streams/list_stream_executions.json"}, args: args{streamID: 1, limit: 950, offset: 1}, wantErr: false},
+		{name: "Test List Stream Executions Fails", fields: fields{code: http.StatusBadRequest, filename: "test_data/streams/bad_req_list_streams.txt"}, args: args{streamID: 0, limit: 3, offset: 1}, wantErr: true},
+		{name: "Test List Stream Executions Fails offset out of bounds", fields: fields{code: http.StatusBadRequest, filename: "test_data/streams/bad_req_list_streams.txt"}, args: args{streamID: 1, limit: 3, offset: 99999}, wantErr: true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			maxListSize := 50
+			client, server := testClientFile(tt.fields.code, tt.fields.filename)
+			defer server.Close()
+
+			streamList, err := client.ListStreamExecutions(tt.args.streamID, tt.args.limit, tt.args.offset)
+			// Not expecting err
+			if (err != nil) != tt.wantErr {
+				t.Fatal(err)
+			}
+
+			// Expect err
+			if err != nil && tt.wantErr {
+				se, ok := err.(Error)
+				if !ok {
+					t.Error("Expected domo error, got", err)
+				}
+				if se.Status != tt.fields.code {
+					t.Errorf("Expected HTTP %d, got %d", tt.fields.code, se.Status)
+				}
+				if se.Message != "domo err msg" {
+					t.Error("Unexpected error message: ", se.Message)
+				}
+			}
+			// if streamList == nil {
+			// 	t.Fatal("Got nil Streams")
+			// }
+
+			// Over max limit doesn't return more than max limit.
+			if tt.args.limit > maxListSize && len(streamList) > maxListSize {
+				t.Errorf("Expected list returned to be lte %d, go list size %d", maxListSize, len(streamList))
+			}
+			if len(streamList) > tt.args.limit {
+				t.Errorf("expected lte streams than limit of %d, got %d ", tt.args.limit, len(streamList))
+			}
+		})
+	}
+}
 func Test_DeleteStream(t *testing.T) {
 	client, server := testClientString(http.StatusOK, "")
 	defer server.Close()
