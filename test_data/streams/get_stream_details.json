@@ -1,0 +1,19 @@
+{
+    "id" : 42,
+    "dataSet" : {
+      "id" : "0c1e0dbe-9f71-4625-9b50-b79e6e4266f2",
+      "name" : "Leonhard Euler Party",
+      "description" : "Mathematician Guest List",
+      "rows" : 0,
+      "columns" : 0,
+      "owner" : {
+        "id" : 27,
+        "name" : "DomoSupport"
+      },
+      "createdAt" : "2016-05-27T17:53:04Z",
+      "updatedAt" : "2016-05-26T21:03:35Z"
+    },
+    "updateMethod" : "APPEND",
+    "createdAt" : "2016-05-26T21:03:35Z",
+    "modifiedAt" : "2016-05-26T21:03:35Z"
+  }

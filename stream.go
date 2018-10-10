@@ -39,6 +39,14 @@ type StreamDatasetSchema struct {
 	UpdateMethod  string         `json:"updateMethod,omitempty"`
 }
 
+type StreamFragment struct {
+	ID           int    `json:"id,omitempty"`
+	StartedAt    string `json:"startedAt,omitempty"`
+	CurrentState string `json:"currentState,omitempty"`
+	CreatedAt    string `json:"createdAt,omitempty"`
+	ModifiedAt   string `json:"modifiedAt,omitempty"`
+}
+
 // CreateNewStream creates a stream to use to create executions and upload data with streams to a dataset.
 func (c *Client) CreateNewStream(schema StreamDatasetSchema) (*StreamDataset, error) {
 	//POST
@@ -171,24 +179,26 @@ func (c *Client) ListStreamExecutions(streamID int, limit int, offset int) ([]*S
 	return d, nil
 }
 
+// TODO: return json response as obj
 // UploadDataPart uploads a csv given as a string to an active stream execution.
-func (c *Client) UploadDataPart(streamID int, executionID int, partNumber int, csvData string) error {
+func (c *Client) UploadDataPart(streamID int, executionID int, partNumber int, csvData string) (*StreamFragment, error) {
 	domoURL := fmt.Sprintf("%s/v1/streams/%d/executions/%d/part/%d", c.baseURL, streamID, executionID, partNumber)
 	buf := new(bytes.Buffer)
 	buf.WriteString(csvData)
 	req, err := http.NewRequest("POST", domoURL, buf)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	req.Header.Add("Content-Type", "text/csv")
 
-	err = c.execute(req, nil, 204)
+	var res *StreamFragment
+	err = c.execute(req, &res, 204)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return res, nil
 }
 
 // CommitExecution finalizes a stream execution and inserts data parts into the dataset for the stream.

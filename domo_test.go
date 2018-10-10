@@ -3,12 +3,48 @@
 package domo
 
 import (
+	"io"
 	"net/http"
+	"net/http/httptest"
+	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
 
+func testClient(code int, body io.Reader, validators ...func(*http.Request)) (*Client, *httptest.Server) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for _, v := range validators {
+			v(r)
+		}
+		w.WriteHeader(code)
+		io.Copy(w, body)
+		r.Body.Close()
+		if closer, ok := body.(io.Closer); ok {
+			closer.Close()
+		}
+	}))
+	client := &Client{
+		http:    http.DefaultClient,
+		baseURL: server.URL + "/",
+	}
+	return client, server
+}
+
+// Client whose reqs will always return a specified status code and body.
+func testClientString(code int, body string, validators ...func(*http.Request)) (*Client, *httptest.Server) {
+	return testClient(code, strings.NewReader(body))
+}
+
+// Client whose reqs will always return a specified status code and return a body read from a file.
+func testClientFile(code int, filename string, validators ...func(*http.Request)) (*Client, *httptest.Server) {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	return testClient(code, f)
+}
 func TestError_Error(t *testing.T) {
 	tests := []struct {
 		name string
