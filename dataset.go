@@ -195,9 +195,7 @@ func (c *Client) ReplaceData(id string, dataRows string) error {
 func (c *Client) ExportData(id string, includeHeader bool) (string, error) {
 	domoURL := fmt.Sprintf("%s/v1/datasets/%s/data?includeHeader=%t", c.baseURL, id, includeHeader)
 
-	var s string
-
-	err := c.get(domoURL, &s)
+	s, err := c.getCSV(domoURL)
 	if err != nil {
 		return "", err
 	}
