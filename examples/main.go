@@ -6,8 +6,8 @@ import (
 	"log"
 	"os"
 
-	domo ".."
 	"github.com/joho/godotenv"
+	domo "gitlab.com/buildintelligence/domo-gopher"
 )
 
 func main() {
