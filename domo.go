@@ -187,3 +187,33 @@ func (c *Client) getCSV(url string) (string, error) {
 
 	return s, nil
 }
+
+func (c *Client) getRespBody(url string) (string, error) {
+	var s string
+	for {
+		resp, err := c.http.Get(url)
+		if err != nil {
+			return "", err
+		}
+
+		defer resp.Body.Close()
+
+		if resp.StatusCode == rateLimitExceededStatusCode && c.AutoRetry {
+			time.Sleep(retryDuration(resp))
+			continue
+		}
+		if resp.StatusCode != http.StatusOK {
+			return "", c.decodeError(resp)
+		}
+
+		b, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return "", err
+		}
+		s = string(b)
+
+		break
+	}
+
+	return s, nil
+}
