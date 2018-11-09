@@ -1,0 +1,24 @@
+[
+    {
+        "id": 535460005,
+        "title": "Supreme Ninja Master",
+        "email": "hattori.hanzo@domo.com",
+        "role": "Admin",
+        "phone": "801-787-8456",
+        "name": "Hattori Hanzo"
+    },
+    {
+        "id": 1845705061,
+        "title": "Game Theory",
+        "email": "john.nash@domo.com",
+        "role": "Admin",
+        "name": "John Forbes Nash, Jr."
+    },
+    {
+        "id": 55541092,
+        "title": "Electric Mayhem",
+        "email": "doctor.teeth@domo.com",
+        "role": "Privileged",
+        "name": "Dr. Teeth"
+    }
+]
