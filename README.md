@@ -11,12 +11,12 @@ DASHBOARD_SCOPE=true
 ```
 
 # TODO:
-- [] improve README
+- [ ] improve README
 - [x] improve auth scope configuration to include scope in the url auth params based on input flags
 - [x] Dataset API wrapper methods
 - [x] Stream API wrapper methods
-- [] User API wrapper methods
-- [] Group API wrapper methods
-- [] Page API wrapper methods
-- [] Go Modules for dependency management
+- [x] User API wrapper methods
+- [x] Group API wrapper methods
+- [ ] Page API wrapper methods
+- [x] Go Modules for dependency management
 
