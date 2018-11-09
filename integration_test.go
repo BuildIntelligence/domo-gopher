@@ -213,3 +213,57 @@ func TestListStreamsFieldsParamIsNotIgnoredByDomo(t *testing.T) {
 	}
 
 }
+
+// https://api.domo.com/v1/streams?q=dataSource.owner.id:1704739518&offset=0&limit=5
+func TestListStreamsQParamIsNotIgnoredByDomo(t *testing.T) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file, make sure you've created one in the same directory as main.go")
+	}
+
+	clientID := os.Getenv("DOMO_CLIENT_ID")
+	clientSecret := os.Getenv("DOMO_SECRET")
+	auth := NewAuthenticator(ScopeData)
+	auth.SetAuthInfo(clientID, clientSecret)
+	client := auth.NewClient()
+
+	noFieldsParamURL := fmt.Sprintf("https://api.domo.com/v1/streams?offset=%d&limit=%d", 0, 5)
+
+	ownerIDQueryURL := fmt.Sprintf("https://api.domo.com/v1/streams?q=dataSource.owner.id:%d&offset=%d&limit=%d", 1704739518, 0, 5)
+
+	dataSourceNameQueryURL := fmt.Sprintf("https://api.domo.com/v1/streams?q=dataSource.name:%s&offset=%d&limit=%d", "Rusty", 0, 5)
+
+	dataSourceIDQueryURL := fmt.Sprintf("https://api.domo.com/v1/streams?q=dataSource.id:%s&offset=%d&limit=%d", "59682470-ff7b-43c7-9024-a9deea824eb6", 0, 5)
+
+	noFieldsParamResp, err := client.getRespBody(noFieldsParamURL)
+	if err != nil {
+		t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
+	}
+
+	ownerIDQueryResp, err := client.getRespBody(ownerIDQueryURL)
+	if err != nil {
+		t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
+	}
+
+	dataSourceNameQueryResp, err := client.getRespBody(dataSourceNameQueryURL)
+	if err != nil {
+		t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
+	}
+
+	dataSourceIDQueryResp, err := client.getRespBody(dataSourceIDQueryURL)
+	if err != nil {
+		t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
+	}
+
+	if noFieldsParamResp == ownerIDQueryResp {
+		t.Errorf("Expected no fields param and query by owner ID to return different responses \n%s\n%s", noFieldsParamResp, ownerIDQueryResp)
+	}
+
+	if noFieldsParamResp == dataSourceNameQueryResp {
+		t.Errorf("Expected no fields param and query by name to return different responses \n%s\n%s", noFieldsParamResp, dataSourceNameQueryResp)
+	}
+
+	if noFieldsParamResp == dataSourceIDQueryResp {
+		t.Errorf("Expected no fields param and query by datasource ID to return different responses \n%s\n%s", noFieldsParamResp, dataSourceIDQueryResp)
+	}
+}

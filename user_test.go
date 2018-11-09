@@ -50,8 +50,8 @@ func TestClient_CreateNewUser(t *testing.T) {
 	client, server := testClientFile(http.StatusOK, filename)
 	defer server.Close()
 
-	user := User{Name = "Leonhard Euler"}
-	res, err := client.CreateNewUser(user, 201)
+	user := User{Name: "Leonhard Euler"}
+	res, err := client.CreateNewUser(user, false)
 	if err != nil {
 		t.Fatal(err)
 	}
