@@ -164,11 +164,7 @@ func (c *Client) DeleteDataset(id string) error {
 	req.Header.Add("Content-Type", "application/json")
 
 	err = c.execute(req, nil, 204)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // ReplaceData replaces the Domo Dataset with the provided CSV String.
@@ -184,11 +180,7 @@ func (c *Client) ReplaceData(id string, dataRows string) error {
 	req.Header.Add("Content-Type", "text/csv")
 
 	err = c.execute(req, nil, 204)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // ExportData returns the data from a given dataset id as a csv with or without header row.

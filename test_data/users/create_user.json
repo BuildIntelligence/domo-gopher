@@ -1,0 +1,20 @@
+{
+    "alternateEmail": "leonhardeuler@email.com",
+    "createdAt": "2017-06-12T20:16:59Z",
+    "email": "leonhard.euler@domo.com",
+    "employeeNumber": 23432,
+    "groups": [
+        {
+            "id": 1324037627,
+            "name": "Default"
+        }
+    ],
+    "id": 959463190,
+    "image": "https://instance.domo.com/avatar/thumb/domo/959463190",
+    "location": "American Fork",
+    "name": "Leonhard Euler",
+    "phone": "888-361-1078",
+    "role": "Admin",
+    "title": "Software Engineer",
+    "updatedAt": "2017-06-12T20:16:59Z"
+}
