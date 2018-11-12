@@ -140,11 +140,7 @@ func (c *Client) DeleteStream(streamID int) error {
 	req.Header.Add("Content-Type", "application/json")
 
 	err = c.execute(req, nil, 204)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 // CreateStreamExecution creates a new execution for a given stream to upload dataparts to.
@@ -232,9 +228,5 @@ func (c *Client) AbortStreamExecution(streamID int, executionID int) error {
 	req.Header.Add("Content-Type", "application/json")
 
 	err = c.execute(req, nil, 204)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

@@ -256,14 +256,14 @@ func TestListStreamsQParamIsNotIgnoredByDomo(t *testing.T) {
 	}
 
 	if noFieldsParamResp == ownerIDQueryResp {
-		t.Errorf("Expected no fields param and query by owner ID to return different responses \n%s\n%s", noFieldsParamResp, ownerIDQueryResp)
+		t.Errorf("Expected no fields param and query by owner ID to return different responses \n%s\n%s", "", "") //noFieldsParamResp, ownerIDQueryResp)
 	}
 
 	if noFieldsParamResp == dataSourceNameQueryResp {
-		t.Errorf("Expected no fields param and query by name to return different responses \n%s\n%s", noFieldsParamResp, dataSourceNameQueryResp)
+		t.Errorf("Expected no fields param and query by name to return different responses \n%s\n%s", "", "") //noFieldsParamResp, dataSourceNameQueryResp)
 	}
 
 	if noFieldsParamResp == dataSourceIDQueryResp {
-		t.Errorf("Expected no fields param and query by datasource ID to return different responses \n%s\n%s", noFieldsParamResp, dataSourceIDQueryResp)
+		t.Errorf("Expected no fields param and query by datasource ID to return different responses \n%s\n%s", "", "") //noFieldsParamResp, dataSourceIDQueryResp)
 	}
 }
