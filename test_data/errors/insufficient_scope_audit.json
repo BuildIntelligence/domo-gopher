@@ -1,0 +1,7 @@
+[
+    {
+        "error": "insufficient_scope",
+        "error_description": "Insufficient scope for this resource",
+        "scope": "audit"
+    }
+]

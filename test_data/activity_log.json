@@ -1,0 +1,17 @@
+[{
+        "actionType": "VIEWED",
+        "actorId": 0,
+        "actorName": "",
+        "additionalComment": "Leonard Euler viewed page Intro to Domo.",
+        "browserDetails": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.94 Safari/537.36",
+        "device": "desktop",
+        "eventText": "Viewed page",
+        "ipAddress": "50.207.241.61",
+        "objectId": "663909457",
+        "objectName": "Intro to Domo",
+        "objectType": "PAGE",
+        "time": "2017-12-13 10:57:35 PM",
+        "userId": "1619916076",
+        "userName": "Leonard Euler",
+        "userType": "USER"
+}]
