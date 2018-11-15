@@ -67,7 +67,7 @@ func (c *Client) decodeError(resp *http.Response) error {
 	}
 	err = json.NewDecoder(buf).Decode(&e)
 	if err != nil {
-		return fmt.Errorf("domo: couldn't decode err: (%d) [%s]", len(responseBody), responseBody)
+		return fmt.Errorf("domo: HTTP %d. couldn't decode err: Length (%d) [%s]", resp.StatusCode, len(responseBody), responseBody)
 	}
 
 	if e.E.Message == "" {

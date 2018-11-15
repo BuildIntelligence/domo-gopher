@@ -3,6 +3,7 @@
 package domo
 
 import (
+	"flag"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,11 @@ import (
 	"strings"
 	"testing"
 	"time"
+)
+
+var (
+	domod      = flag.Bool("domo", false, "Check for getting Domo'd, Run Domo integration tests to check if Domo's API even works how they have it documented")
+	domogopher = flag.Bool("domoGopher", false, "Run Domo integration tests to check if Domo Gopher works correctly with Domo's API")
 )
 
 func testClient(code int, body io.Reader, validators ...func(*http.Request)) (*Client, *httptest.Server) {
