@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 )
 
 // Data types for Domo Columns
@@ -193,4 +194,24 @@ func (c *Client) ExportData(id string, includeHeader bool) (string, error) {
 	}
 
 	return s, nil
+}
+
+func (c *Client) QueryData(id, sqlQuery string) (string, error) {
+	domoURL := fmt.Sprintf("%s/v1/datasets/query/execute/%s", c.baseURL, id)
+
+	body := fmt.Sprintf("{ \"sql\": \"%s\" }", sqlQuery)
+	buf := strings.NewReader(body)
+	req, err := http.NewRequest("POST", domoURL, buf)
+	if err != nil {
+		return "", err
+	}
+
+	req.Header.Add("Content-Type", "application/json")
+
+	result, err := c.executeReq(req, 201)
+	if err != nil {
+		return "", err
+	}
+
+	return result, nil
 }

@@ -117,6 +117,28 @@ func (c *Client) execute(req *http.Request, result interface{}, needsStatus ...i
 	}
 	return nil
 }
+func (c *Client) executeReq(req *http.Request, needsStatus ...int) (string, error) {
+	for {
+		resp, err := c.http.Do(req)
+		if err != nil {
+			return "", err
+		}
+		defer resp.Body.Close()
+
+		if c.AutoRetry && shouldRetry(resp.StatusCode) {
+			time.Sleep(retryDuration(resp))
+			continue
+		}
+		if resp.StatusCode != http.StatusOK && isFailure(resp.StatusCode, needsStatus) {
+			return "", c.decodeError(resp)
+		}
+
+		result, err := ioutil.ReadAll(resp.Body)
+		return string(result), err
+		break
+	}
+	return "", nil
+}
 
 func retryDuration(resp *http.Response) time.Duration {
 	raw := resp.Header.Get("Retry-After")
