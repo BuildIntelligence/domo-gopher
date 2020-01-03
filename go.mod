@@ -13,6 +13,7 @@ require (
 	github.com/client9/misspell v0.3.4 // indirect
 	github.com/fatih/gomodifytags v0.0.0-20180914191908-141225bf62b6 // indirect
 	github.com/golang/lint v0.0.0-20181026193005-c67002cb31c3 // indirect
+	github.com/google/go-querystring v1.0.0
 	github.com/google/shlex v0.0.0-20150127133951-6f45313302b9 // indirect
 	github.com/gordonklaus/ineffassign v0.0.0-20180909121442-1003c8bd00dc // indirect
 	github.com/jgautheron/goconst v0.0.0-20170703170152-9740945f5dcb // indirect
@@ -44,3 +45,5 @@ require (
 	mvdan.cc/interfacer v0.0.0-20180901003855-c20040233aed // indirect
 	mvdan.cc/unparam v0.0.0-20181021212735-8e9846b49e8a // indirect
 )
+
+go 1.13
