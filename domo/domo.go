@@ -107,6 +107,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c := &Client{client: httpClient, BaseURL: baseURL, UserAgent: userAgent}
 	c.common.client = c
 	c.Datasets = (*DatasetsService)(&c.common)
+	c.Streams = (*StreamsService)(&c.common)
 	return c
 }
 
@@ -211,12 +212,15 @@ func CheckResponse(r *http.Response) error {
 	if c := r.StatusCode; 200 <= c && c <= 299 {
 		return nil
 	}
-	errorResp := &Error{}
+	// errorResp := &Error{}
+	var e struct {
+		E Error `json:"error"`
+	}
 	data, err := ioutil.ReadAll(r.Body)
 	if err == nil && data != nil {
-		json.Unmarshal(data, errorResp)
+		json.Unmarshal(data, &e)
 	}
-	return errorResp
+	return e.E
 }
 
 // Error represents an error returned by the Domo API.

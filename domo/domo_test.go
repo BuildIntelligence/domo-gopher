@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"reflect"
 	"strings"
@@ -37,10 +38,35 @@ func testClient(code int, body io.Reader, validators ...func(*http.Request)) (*C
 	}
 	return client, server
 }
+func testClientV2(code int, body io.Reader, validators ...func(*http.Request)) (*Client, *httptest.Server) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		for _, v := range validators {
+			v(r)
+		}
+		w.WriteHeader(code)
+		io.Copy(w, body)
+		r.Body.Close()
+		if closer, ok := body.(io.Closer); ok {
+			closer.Close()
+		}
+	}))
+
+	client := NewClient(nil)
+	u, _ := url.Parse(server.URL + "/")
+	client.BaseURL = u
+	client.baseURL = server.URL + "/"
+
+	return client, server
+}
 
 // Client whose reqs will always return a specified status code and body.
 func testClientString(code int, body string, validators ...func(*http.Request)) (*Client, *httptest.Server) {
 	return testClient(code, strings.NewReader(body))
+}
+
+// Client whose reqs will always return a specified status code and body.
+func testClientStringV2(code int, body string, validators ...func(*http.Request)) (*Client, *httptest.Server) {
+	return testClientV2(code, strings.NewReader(body))
 }
 
 // Client whose reqs will always return a specified status code and return a body read from a file.
@@ -50,6 +76,15 @@ func testClientFile(code int, filename string, validators ...func(*http.Request)
 		panic(err)
 	}
 	return testClient(code, f)
+}
+
+// Client whose reqs will always return a specified status code and return a body read from a file.
+func testClientFileV2(code int, filename string, validators ...func(*http.Request)) (*Client, *httptest.Server) {
+	f, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+	return testClientV2(code, f)
 }
 func TestError_Error(t *testing.T) {
 	tests := []struct {
