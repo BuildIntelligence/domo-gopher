@@ -113,7 +113,7 @@ func NewClient(httpClient *http.Client) *Client {
 // in which case it is resolved relative to the BaseURL of the Client.
 // Relative URLs should always be specified without a preceding slash.
 // If specified, the value pointed to by body is JSON encoded and included as the
-// request body.
+// request body. If the body is an io.ReadWriter it's used as the body instead of JSON encoding it.
 func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Request, error) {
 	if !strings.HasSuffix(c.BaseURL.Path, "/") {
 		return nil, fmt.Errorf("BaseURL must have a trailing slash, but %q does not", c.BaseURL)
@@ -125,12 +125,16 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 
 	var buf io.ReadWriter
 	if body != nil {
-		buf = new(bytes.Buffer)
-		enc := json.NewEncoder(buf)
-		enc.SetEscapeHTML(false)
-		err := enc.Encode(body)
-		if err != nil {
-			return nil, err
+		if w, ok := body.(io.ReadWriter); ok {
+			buf = w
+		} else {
+			buf = new(bytes.Buffer)
+			enc := json.NewEncoder(buf)
+			enc.SetEscapeHTML(false)
+			err := enc.Encode(body)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
