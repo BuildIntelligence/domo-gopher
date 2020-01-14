@@ -11,7 +11,7 @@ import (
 // DatasetsService handles communication with the dataset
 // related methods of the Domo API.
 //
-// Domo API Docs: https://developer.domo/com/
+// Domo API Docs: https://developer.domo.com/docs/dataset-api-reference/dataset
 type DatasetsService service
 
 // List the datasets. Limit should be between 1 and 50.

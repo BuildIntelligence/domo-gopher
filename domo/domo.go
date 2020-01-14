@@ -58,6 +58,7 @@ type Client struct {
 
 	// Services used for talking to different parts of the Domo API.
 	Datasets *DatasetsService
+	Streams  *StreamsService
 }
 
 type service struct {
