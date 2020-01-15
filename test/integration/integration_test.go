@@ -5,10 +5,15 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"gitlab.com/buildintelligence/domo-gopher/domo"
 	"os"
 	"testing"
 
+	"gitlab.com/buildintelligence/domo-gopher/domo"
+)
+
+var (
+	domod      = flag.Bool("domo", false, "Check for getting Domo'd, Run Domo integration tests to check if Domo's API even works how they have it documented")
+	domogopher = flag.Bool("domoGopher", false, "Run Domo integration tests to check if Domo Gopher works correctly with Domo's API")
 )
 
 func TestListStreamsOffsetParamIsNotIgnoredByDomo(t *testing.T) {
@@ -300,7 +305,6 @@ func TestListStreamsQParamIsNotIgnoredByDomo(t *testing.T) {
 		dataSourceNameQueryURL := fmt.Sprintf("https://api.domo.com/v1/streams?q=dataSource.name:%s&offset=%d&limit=%d", "Rusty", 0, 5)
 
 		dataSourceIDQueryURL := fmt.Sprintf("https://api.domo.com/v1/streams?q=dataSource.id:%s&offset=%d&limit=%d", "59682470-ff7b-43c7-9024-a9deea824eb6", 0, 5)
-
 
 		rq1, err := client.NewRequest("GET", noFieldsParamURL, nil)
 		nfpBuf := new(bytes.Buffer)
