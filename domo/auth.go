@@ -69,10 +69,7 @@ func (a *Authenticator) SetAuthInfo(clientID, clientSecret string) {
 }
 
 // NewClient creates a Client that will be used for Domo API Requests.
-func (a Authenticator) NewClient() Client {
+func (a Authenticator) NewClient() *Client {
 	client := a.config.Client(a.context)
-	return Client{
-		http:    client,
-		baseURL: baseAddress,
-	}
+	return NewClient(client)
 }

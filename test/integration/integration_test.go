@@ -1,13 +1,14 @@
 package domo
 
 import (
+	"bytes"
+	"context"
 	"flag"
 	"fmt"
-	"log"
+	"gitlab.com/buildintelligence/domo-gopher/domo"
 	"os"
 	"testing"
 
-	"github.com/joho/godotenv"
 )
 
 func TestListStreamsOffsetParamIsNotIgnoredByDomo(t *testing.T) {
@@ -20,26 +21,29 @@ func TestListStreamsOffsetParamIsNotIgnoredByDomo(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as main.go")
-		}
 
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
-		auth := NewAuthenticator(ScopeData)
+		auth := domo.NewAuthenticator(domo.ScopeData)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		off0URL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d", 3, 0)
 		off2URL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d", 3, 2)
 
-		off0Resp, err := client.getRespBody(off0URL)
+		rq1, err := client.NewRequest("GET", off0URL, nil)
+		off0Buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, off0Buf)
+		off0Resp := off0Buf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		off2Resp, err := client.getRespBody(off2URL)
+		rq2, err := client.NewRequest("GET", off2URL, nil)
+		off2Buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq2, off2Buf)
+		off2Resp := off2Buf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
@@ -48,12 +52,12 @@ func TestListStreamsOffsetParamIsNotIgnoredByDomo(t *testing.T) {
 			t.Error("Expected offset 0 to return a different response than offset 2")
 		}
 
-		listOff0, err := client.ListStreams(3, 0)
+		listOff0, _, err := client.Streams.List(ctx, 3, 0)
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		listOff2, err := client.ListStreams(3, 2)
+		listOff2, _, err := client.Streams.List(ctx, 3, 2)
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
@@ -77,26 +81,29 @@ func TestListStreamsLimitParamIsNotIgnoredByDomo(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as main.go")
-		}
 
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
-		auth := NewAuthenticator(ScopeData)
+		auth := domo.NewAuthenticator(domo.ScopeData)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		lim1URL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d", 1, 0)
 		lim5URL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d", 5, 0)
 
-		lim1Resp, err := client.getRespBody(lim1URL)
+		rq1, err := client.NewRequest("GET", lim1URL, nil)
+		lim1Buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, lim1Buf)
+		lim1Resp := lim1Buf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		lim5Resp, err := client.getRespBody(lim5URL)
+		rq2, err := client.NewRequest("GET", lim5URL, nil)
+		lim5Buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq2, lim5Buf)
+		lim5Resp := lim5Buf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
@@ -105,12 +112,12 @@ func TestListStreamsLimitParamIsNotIgnoredByDomo(t *testing.T) {
 			t.Error("Expected limit 1 to return a different response than limit 5")
 		}
 
-		listLim1, err := client.ListStreams(1, 0)
+		listLim1, _, err := client.Streams.List(ctx, 1, 0)
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		listLim5, err := client.ListStreams(5, 0)
+		listLim5, _, err := client.Streams.List(ctx, 5, 0)
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
@@ -138,26 +145,29 @@ func TestListStreamsSortParamIsNotIgnoredByDomo(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as main.go")
-		}
 
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
-		auth := NewAuthenticator(ScopeData)
+		auth := domo.NewAuthenticator(domo.ScopeData)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		sortAscURL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d&sort=%s", 5, 0, "name")
 		sortDescURL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d&sort=%s", 5, 0, "-name")
 
-		sortAscResp, err := client.getRespBody(sortAscURL)
+		rq1, err := client.NewRequest("GET", sortAscURL, nil)
+		ascBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, ascBuf)
+		sortAscResp := ascBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		sortDescResp, err := client.getRespBody(sortDescURL)
+		rq2, err := client.NewRequest("GET", sortDescURL, nil)
+		descBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq2, descBuf)
+		sortDescResp := descBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
@@ -178,44 +188,55 @@ func TestListStreamsFieldsParamIsNotIgnoredByDomo(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as main.go")
-		}
 
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
-		auth := NewAuthenticator(ScopeData)
+		auth := domo.NewAuthenticator(domo.ScopeData)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
-
+		ctx := context.Background()
 		noFieldsParamURL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d", 5, 0)
 		datasetFieldParamURL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d&fields=%s", 5, 0, "dataSet")
 		updateMethodFieldParamURL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d&fields=%s", 5, 0, "updateMethod")
 		createdAtFieldParamURL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d&fields=%s", 5, 0, "createdAt")
 		modifiedAtFieldParamURL := fmt.Sprintf("https://api.domo.com/v1/streams?limit=%d&offset=%d&fields=%s", 5, 0, "modifiedAt")
 
-		noFieldsParamResp, err := client.getRespBody(noFieldsParamURL)
+		rq, err := client.NewRequest("GET", noFieldsParamURL, nil)
+		nfpBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq, nfpBuf)
+		noFieldsParamResp := nfpBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		datasetFieldParamResp, err := client.getRespBody(datasetFieldParamURL)
+		rq1, err := client.NewRequest("GET", datasetFieldParamURL, nil)
+		dfpBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, dfpBuf)
+		datasetFieldParamResp := dfpBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		updateMethodFieldParamResp, err := client.getRespBody(updateMethodFieldParamURL)
+		rq2, err := client.NewRequest("GET", updateMethodFieldParamURL, nil)
+		umfpBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq2, umfpBuf)
+		updateMethodFieldParamResp := umfpBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		createdAtFieldParamResp, err := client.getRespBody(createdAtFieldParamURL)
+		rq3, err := client.NewRequest("GET", createdAtFieldParamURL, nil)
+		cafpBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq3, cafpBuf)
+		createdAtFieldParamResp := cafpBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		modifiedAtFieldParamResp, err := client.getRespBody(modifiedAtFieldParamURL)
+		rq4, err := client.NewRequest("GET", modifiedAtFieldParamURL, nil)
+		mafpBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq4, mafpBuf)
+		modifiedAtFieldParamResp := mafpBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
@@ -264,16 +285,13 @@ func TestListStreamsQParamIsNotIgnoredByDomo(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as main.go")
-		}
 
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
-		auth := NewAuthenticator(ScopeData)
+		auth := domo.NewAuthenticator(domo.ScopeData)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		noFieldsParamURL := fmt.Sprintf("https://api.domo.com/v1/streams?offset=%d&limit=%d", 0, 5)
 
@@ -283,22 +301,35 @@ func TestListStreamsQParamIsNotIgnoredByDomo(t *testing.T) {
 
 		dataSourceIDQueryURL := fmt.Sprintf("https://api.domo.com/v1/streams?q=dataSource.id:%s&offset=%d&limit=%d", "59682470-ff7b-43c7-9024-a9deea824eb6", 0, 5)
 
-		noFieldsParamResp, err := client.getRespBody(noFieldsParamURL)
+
+		rq1, err := client.NewRequest("GET", noFieldsParamURL, nil)
+		nfpBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, nfpBuf)
+		noFieldsParamResp := nfpBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		ownerIDQueryResp, err := client.getRespBody(ownerIDQueryURL)
+		rq2, err := client.NewRequest("GET", ownerIDQueryURL, nil)
+		oiqBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq2, oiqBuf)
+		ownerIDQueryResp := oiqBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		dataSourceNameQueryResp, err := client.getRespBody(dataSourceNameQueryURL)
+		rq3, err := client.NewRequest("GET", dataSourceNameQueryURL, nil)
+		dsnqBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq3, dsnqBuf)
+		dataSourceNameQueryResp := dsnqBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}
 
-		dataSourceIDQueryResp, err := client.getRespBody(dataSourceIDQueryURL)
+		rq4, err := client.NewRequest("GET", dataSourceIDQueryURL, nil)
+		dsiqBuf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq4, dsiqBuf)
+		dataSourceIDQueryResp := dsiqBuf.String()
 		if err != nil {
 			t.Errorf("Unexpected Error Retrieving Streams List: %s", err)
 		}

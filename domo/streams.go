@@ -7,6 +7,47 @@ import (
 	"net/http"
 )
 
+// UpdateMethodAppend and UpdateMethodReplace for StreamDataset UpdateMethod.
+const (
+	UpdateMethodAppend  = "APPEND"
+	UpdateMethodReplace = "REPLACE"
+)
+
+// StreamDataset describes the Domo Dataset for a Domo Stream.
+type StreamDataset struct {
+	ID            int              `json:"id,omitempty"`
+	Dataset       *DatasetDetails  `json:"dataset,omitempty"`
+	UpdateMethod  string           `json:"updateMethod,omitempty"`
+	CreatedAt     string           `json:"createdAt,omitempty"`
+	ModifiedAt    string           `json:"modifiedAt,omitempty"`
+	LastExecution *StreamExecution `json:"lastExecution,omitempty"`
+}
+
+// StreamExecution describes the Execution for a given Domo Stream.
+type StreamExecution struct {
+	ID           int    `json:"id,omitempty"`
+	StartedAt    string `json:"startedAt,omitempty"`
+	EndedAt      string `json:"endedAt,omitempty"`
+	CurrentState string `json:"currentState,omitempty"`
+	CreatedAt    string `json:"createdAt,omitempty"`
+	ModifiedAt   string `json:"modifiedAt,omitempty"`
+}
+
+// StreamDatasetSchema describes the schema for a StreamDataset.
+type StreamDatasetSchema struct {
+	DatasetSchema *DatasetSchema `json:"schema,omitempty"`
+	UpdateMethod  string         `json:"updateMethod,omitempty"`
+}
+
+// StreamFragment contains some details about a data part upload
+type StreamFragment struct {
+	ID           int    `json:"id,omitempty"`
+	StartedAt    string `json:"startedAt,omitempty"`
+	CurrentState string `json:"currentState,omitempty"`
+	CreatedAt    string `json:"createdAt,omitempty"`
+	ModifiedAt   string `json:"modifiedAt,omitempty"`
+}
+
 // StreamsService handles communication with the streams
 // related methods of the Domo API.
 //

@@ -1,15 +1,17 @@
 package domo
 
 import (
+	"context"
 	"net/http"
 	"testing"
 )
 
-func TestClient_GetUserInfo(t *testing.T) {
-	client, server := testClientFile(http.StatusOK, "test_data/users/retrieve_user.json")
+func TestUsersService_Info(t *testing.T) {
+	client, server := testClientFileV2(http.StatusOK, "../test_data/users/retrieve_user.json")
 	defer server.Close()
+	ctx := context.Background()
 
-	userInfo, err := client.GetUserInfo(871428330)
+	userInfo, _, err := client.Users.Info(ctx, 871428330)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,11 +26,12 @@ func TestClient_GetUserInfo(t *testing.T) {
 	}
 }
 
-func TestClient_GetUserInfoBadID(t *testing.T) {
-	client, server := testClientString(http.StatusNotFound, `{"error": { "status": 404, "message": "domo err msg"}}`)
+func TestUsersService_InfoBadID(t *testing.T) {
+	client, server := testClientStringV2(http.StatusNotFound, `{"error": { "status": 404, "message": "domo err msg"}}`)
 	defer server.Close()
+	ctx := context.Background()
 
-	userInfo, err := client.GetUserInfo(0)
+	userInfo, _, err := client.Users.Info(ctx, 0)
 	if userInfo != nil {
 		t.Fatal("Expected nil user, got", userInfo.ID)
 	}
@@ -44,14 +47,15 @@ func TestClient_GetUserInfoBadID(t *testing.T) {
 	}
 }
 
-func TestClient_CreateNewUser(t *testing.T) {
+func TestUsersService_Create(t *testing.T) {
 
-	filename := "test_data/users/create_user.json"
-	client, server := testClientFile(http.StatusOK, filename)
+	filename := "../test_data/users/create_user.json"
+	client, server := testClientFileV2(http.StatusOK, filename)
 	defer server.Close()
+	ctx := context.Background()
 
 	user := User{Name: "Leonhard Euler"}
-	res, err := client.CreateNewUser(user, false)
+	res, _, err := client.Users.Create(ctx, user, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,19 +68,12 @@ func TestClient_CreateNewUser(t *testing.T) {
 
 }
 
-func TestClient_UpdateUser(t *testing.T) {
 
-}
-
-func Test_ListUsers(t *testing.T) {
-
-}
-
-func TestClient_DeleteUser(t *testing.T) {
-	client, server := testClientString(http.StatusNoContent, "")
+func TestUsersService_Delete(t *testing.T) {
+	client, server := testClientStringV2(http.StatusNoContent, "")
 	defer server.Close()
-
-	err := client.DeleteUser(1)
+	ctx := context.Background()
+	_, err := client.Users.Delete(ctx, 1)
 	if err != nil {
 		t.Fatal(err)
 	}

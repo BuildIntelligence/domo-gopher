@@ -59,6 +59,10 @@ type Client struct {
 	// Services used for talking to different parts of the Domo API.
 	Datasets *DatasetsService
 	Streams  *StreamsService
+	Users *UsersService
+	Groups *GroupsService
+	Pages *PagesService
+	Logs *ActivityLogsService
 }
 
 type service struct {
@@ -108,6 +112,11 @@ func NewClient(httpClient *http.Client) *Client {
 	c.common.client = c
 	c.Datasets = (*DatasetsService)(&c.common)
 	c.Streams = (*StreamsService)(&c.common)
+	c.Users = (*UsersService)(&c.common)
+	c.Groups = (*GroupsService)(&c.common)
+	c.Pages = (*PagesService)(&c.common)
+	c.Logs = (*ActivityLogsService)(&c.common)
+
 	return c
 }
 

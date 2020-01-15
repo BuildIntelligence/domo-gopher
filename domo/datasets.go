@@ -8,6 +8,74 @@ import (
 	"net/http"
 )
 
+// Data types for Domo Columns
+const (
+	ColumnTypeString   = "STRING"
+	ColumnTypeLong     = "LONG"
+	ColumnTypeDate     = "DATE"
+	ColumnTypeDatetime = "DATETIME"
+	ColumnTypeDouble   = "DOUBLE"
+)
+
+// DatasetDetails contains basic data about a domo Dataset.
+type DatasetDetails struct {
+	ID            string   `json:"id,omitempty"`
+	Name          string   `json:"name,omitempty"`
+	Description   string   `json:"description,omitempty"`
+	Columns       int      `json:"columns,omitempty"`
+	Rows          int      `json:"rows,omitempty"`
+	Schema        Schema   `json:"schema,omitempty"`
+	CreatedAt     string   `json:"createdAt,omitempty"`
+	UpdatedAt     string   `json:"updatedAt,omitempty"`
+	DataCurrentAt string   `json:"dataCurrentAt,omitempty"`
+	PDPEnabled    bool     `json:"pdpEnabled,omitempty"`
+	Owner         *Owner   `json:"owner,omitempty"`
+	Policies      []Policy `json:"policies,omitempty"`
+}
+
+// DatasetSchema contains basic data about dataset and schema
+type DatasetSchema struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Rows        int    `json:"rows,omitempty"`
+	Schema      Schema `json:"schema,omitempty"`
+}
+
+// Schema contains the columns describing a domo dataset schema.
+type Schema struct {
+	Columns []Column `json:"columns,omitempty"`
+}
+
+// Column describes a Domo Dataset Column.
+type Column struct {
+	ColumnType string `json:"type,omitempty"`
+	Name       string `json:"name,omitempty"`
+}
+
+// Owner identifies a Domo User that owns a resource.
+type Owner struct {
+	ID   int    `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+// Policy describes PDP policies for a dataset.
+type Policy struct {
+	ID         int      `json:"id,omitempty"`
+	Name       string   `json:"name,omitempty"`
+	PolicyType string   `json:"type,omitempty"`
+	UserIDs    []int    `json:"users,omitempty"`
+	GroupIDs   []int    `json:"groups,omitempty"`
+	Filters    []Filter `json:"filters,omitempty"`
+}
+
+// Filter describes a PDP policy Data filter for a dataset.
+type Filter struct {
+	Column   string   `json:"column,omitempty"`
+	Not      bool     `json:"not,omitempty"`
+	Operator string   `json:"operator,omitempty"`
+	Values   []string `json:"values,omitempty"`
+}
+
 // DatasetsService handles communication with the dataset
 // related methods of the Domo API.
 //

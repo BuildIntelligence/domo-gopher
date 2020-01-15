@@ -1,66 +1,67 @@
 package domo
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"github.com/joho/godotenv"
 	"log"
 	"net/http"
 	"os"
 	"testing"
-
-	"github.com/joho/godotenv"
 )
 
-func Test_generateAuditQueryParamsString(t *testing.T) {
+func Test_generateAuditQueryUrlParams(t *testing.T) {
 	params := AuditQueryParams{User: "123", Start: 1, End: 2, Limit: 5, Offset: 1}
 	expected := "end=2&limit=5&offset=1&start=1&user=123" // It'll order params alphabetically
-	actual := generateAuditQueryParamsString(params)
+	actual := generateAuditQueryUrlParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
 }
 
-func Test_generateAuditQueryParamsString_no_user_set(t *testing.T) {
+func Test_generateAuditQueryUrlParams_no_user_set(t *testing.T) {
 	params := AuditQueryParams{Start: 1, End: 2, Limit: 5, Offset: 1}
 	expected := "end=2&limit=5&offset=1&start=1" // It'll order params alphabetically
-	actual := generateAuditQueryParamsString(params)
+	actual := generateAuditQueryUrlParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
 }
 
-func Test_generateAuditQueryParamsString_no_time_range_set(t *testing.T) {
+func Test_generateAuditQueryUrlParams_no_time_range_set(t *testing.T) {
 	params := AuditQueryParams{User: "123", Limit: 5, Offset: 1}
 	expected := "limit=5&offset=1&user=123" // It'll order params alphabetically
-	actual := generateAuditQueryParamsString(params)
+	actual := generateAuditQueryUrlParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
 }
 
-func Test_generateAuditQueryParamsString_no_limit_set(t *testing.T) {
+func Test_generateAuditQueryUrlParams_no_limit_set(t *testing.T) {
 	params := AuditQueryParams{User: "123", Start: 1, End: 2, Offset: 1}
 	expected := "end=2&limit=50&offset=1&start=1&user=123" // It'll order params alphabetically, default for limit is 50
-	actual := generateAuditQueryParamsString(params)
+	actual := generateAuditQueryUrlParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
 }
-func Test_generateAuditQueryParamsString_no_parameters_set(t *testing.T) {
+func Test_generateAuditQueryUrlParams_no_parameters_set(t *testing.T) {
 	params := AuditQueryParams{}
 	expected := "limit=50&offset=0" // default for limit is 50, default for offset is 0. It'll order params alphabetically
-	actual := generateAuditQueryParamsString(params)
+	actual := generateAuditQueryUrlParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
 }
 
-func Test_GetActivityLogEntries(t *testing.T) {
-	client, server := testClientFile(http.StatusOK, "test_data/activity_log.json")
+func Test_Entries(t *testing.T) {
+	client, server := testClientFileV2(http.StatusOK, "../test_data/activity_log.json")
 	defer server.Close()
+	ctx := context.Background()
 
 	params := AuditQueryParams{User: "1619916076", Start: 1513230600000, End: 1513231200000}
-	logEntries, err := client.GetActivityLogEntries(params)
+	logEntries, _, err := client.Logs.Entries(ctx, params)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -72,17 +73,18 @@ func Test_GetActivityLogEntries(t *testing.T) {
 	}
 }
 
-func Test_GetActivityLogEntries_Bad_User_ID(t *testing.T) {
+func Test_Entries_Bad_User_ID(t *testing.T) {
 	// Looks like insufficient scope is HTTP 403. created insufficient_scope_audit.json with body.
 	// TODO: Get real Domo Error message response and update this... Looks like the API for this one is
 	// also broken at the moment.
 	// domo: couldn't decode err: (49) [An error occurred while retrieving audit messages]
 	// HTTP 500
-	client, server := testClientString(http.StatusBadRequest, `{"error": { "status": 400, "message": "domo err msg"}}`)
+	client, server := testClientStringV2(http.StatusBadRequest, `{"error": { "status": 400, "message": "domo err msg"}}`)
 	defer server.Close()
+	ctx := context.Background()
 
 	params := AuditQueryParams{User: "-123"} // Bad User ID
-	logEntries, err := client.GetActivityLogEntries(params)
+	logEntries, _, err := client.Logs.Entries(ctx, params)
 	if logEntries != nil {
 		t.Fatal("Expected nil log entries")
 	}
@@ -98,7 +100,7 @@ func Test_GetActivityLogEntries_Bad_User_ID(t *testing.T) {
 	}
 }
 
-func Test_GetActivityLogEntries_no_optional_params_Integration_Test(t *testing.T) {
+func Test_Entries_no_optional_params_Integration_Test(t *testing.T) {
 	// if the -short flag is passed this will be skipped. Since this requires a flag to be
 	// passed everytime I added an opt in flag to actually run these.
 	// This -short flag will help out with the UI in some IDEs though so I have both despite the redundancy.
@@ -133,7 +135,7 @@ func Test_GetActivityLogEntries_no_optional_params_Integration_Test(t *testing.T
 		}
 	}
 }
-func Test_GetActivityLogEntries_Bad_User_ID_Integration_Test(t *testing.T) {
+func Test_LogEntries_Bad_User_ID_Integration_Test(t *testing.T) {
 	// if the -short flag is passed this will be skipped. Since this requires a flag to be
 	// passed everytime I added an opt in flag to actually run these.
 	// This -short flag will help out with the UI in some IDEs though so I have both despite the redundancy.
@@ -168,7 +170,7 @@ func Test_GetActivityLogEntries_Bad_User_ID_Integration_Test(t *testing.T) {
 	}
 }
 
-func Test_GetActivityLogEntries_time_range_params_only_Integration_Test(t *testing.T) {
+func Test_LogEntries_time_range_params_only_Integration_Test(t *testing.T) {
 	// if the -short flag is passed this will be skipped. Since this requires a flag to be
 	// passed everytime I added an opt in flag to actually run these.
 	// This -short flag will help out with the UI in some IDEs though so I have both despite the redundancy.
@@ -205,7 +207,7 @@ func Test_GetActivityLogEntries_time_range_params_only_Integration_Test(t *testi
 	}
 }
 
-func Test_GetActivityLogEntries_User_ID_Param_Integration_Test(t *testing.T) {
+func Test_Entries_User_ID_Param_Integration_Test(t *testing.T) {
 	// if the -short flag is passed this will be skipped. Since this requires a flag to be
 	// passed everytime I added an opt in flag to actually run these.
 	// This -short flag will help out with the UI in some IDEs though so I have both despite the redundancy.

@@ -1,7 +1,9 @@
 package domo
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 )
 
@@ -32,20 +34,33 @@ type AuditQueryParams struct {
 	Offset int    //long, default is 0
 }
 
-// GetActivityLogEntries returns a list of log entries based on the query settings passed. Domo highly recommends using start and end times with limit and offset to retrieve large amounts of information. Domo Endpoint Documentation https://developer.domo.com/docs/activity-log-api-reference/activity-log
-func (c *Client) GetActivityLogEntries(params AuditQueryParams) ([]*LogEntry, error) {
+// ActivityLogsService handles communication with the Activity Log
+// related methods of the Domo API.
+//
+// Domo API Docs: https://developer.domo.com/docs/activity-log-api-reference/activity-log
+type ActivityLogsService service
 
-	query := generateAuditQueryParamsString(params)
-	domoURL := fmt.Sprintf("%s/v1/audit?%s", c.baseURL, query)
+// Entries based on the query settings passed.
+func (s *ActivityLogsService) Entries(ctx context.Context, query AuditQueryParams) ([]*LogEntry, *http.Response, error) {
+	q := generateAuditQueryUrlParams(query)
+	u := fmt.Sprintf("v1/audit?%s", q)
+	req, err := s.client.NewRequest("GET", u, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Set("Accept", "application/json")
 
-	var entries []*LogEntry
+	var logs []*LogEntry
+	resp, err := s.client.Do(ctx, req, &logs)
+	if err != nil {
+		return nil, resp, err
+	}
 
-	err := c.get(domoURL, &entries)
-	return entries, err
+	return logs, resp, nil
 }
 
 // creates the query param(s) string for Domo's Audit log API. It'll order the params alphabetically.
-func generateAuditQueryParamsString(params AuditQueryParams) string {
+func generateAuditQueryUrlParams(params AuditQueryParams) string {
 	q := url.Values{}
 	if params.End != 0 {
 		end := fmt.Sprintf("%d", params.End)
