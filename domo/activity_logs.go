@@ -42,7 +42,7 @@ type ActivityLogsService service
 
 // Entries based on the query settings passed.
 func (s *ActivityLogsService) Entries(ctx context.Context, query AuditQueryParams) ([]*LogEntry, *http.Response, error) {
-	q := generateAuditQueryUrlParams(query)
+	q := generateAuditQueryURLParams(query)
 	u := fmt.Sprintf("v1/audit?%s", q)
 	req, err := s.client.NewRequest("GET", u, nil)
 	if err != nil {
@@ -60,7 +60,7 @@ func (s *ActivityLogsService) Entries(ctx context.Context, query AuditQueryParam
 }
 
 // creates the query param(s) string for Domo's Audit log API. It'll order the params alphabetically.
-func generateAuditQueryUrlParams(params AuditQueryParams) string {
+func generateAuditQueryURLParams(params AuditQueryParams) string {
 	q := url.Values{}
 	if params.End != 0 {
 		end := fmt.Sprintf("%d", params.End)

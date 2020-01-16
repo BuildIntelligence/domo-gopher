@@ -12,17 +12,12 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"reflect"
-	"strconv"
 	"strings"
 	"sync"
-	"time"
-
-	"github.com/google/go-querystring/query"
 )
 
 // Version is the version of this lib.
-const Version = "1.0.0"
+const Version = "2.0.0"
 
 const (
 	defaultBaseURL = "https://api.domo.com/"
@@ -33,20 +28,13 @@ const (
 	// DomoTimestampFormat can be used with time.Parse to create time.Time
 	// values from domo timestamp strings. ISO 8601 UTC timestamp 0 offset
 	DomoTimestampFormat = "2018-09-17T15:04:05Z"
-
-	defaultRetryDuration = time.Second * 5
-
-	// rateLimitExceededStatus Code is the HTTP code the server returns when request freq. is too high.
-	rateLimitExceededStatusCode = 429
 )
 
 // Client is a client for working with the Domo API.
 type Client struct {
-	http      *http.Client
-	baseURL   string
-	AutoRetry bool
-	clientMu  sync.Mutex   // clientMu protects the client during calls that modify the CheckRedirect func.
-	client    *http.Client // HTTP client used to communicate with the API.
+	http     *http.Client
+	clientMu sync.Mutex   // clientMu protects the client during calls that modify the CheckRedirect func.
+	client   *http.Client // HTTP client used to communicate with the API.
 
 	// Base URL for API requests. Defaults to public Domo API. BaseURL should
 	// always be specified with a trailing slash.
@@ -59,43 +47,14 @@ type Client struct {
 	// Services used for talking to different parts of the Domo API.
 	Datasets *DatasetsService
 	Streams  *StreamsService
-	Users *UsersService
-	Groups *GroupsService
-	Pages *PagesService
-	Logs *ActivityLogsService
+	Users    *UsersService
+	Groups   *GroupsService
+	Pages    *PagesService
+	Logs     *ActivityLogsService
 }
 
 type service struct {
 	client *Client
-}
-
-// ListOptions specifies the optional parameters to various List methods that
-// support pagination.
-type ListOptions struct {
-	Limit  int `url:"limit,omitempty"`
-	Offset int `url:"offset,omitempty"`
-}
-
-// addOptions adds the parameters in opt as URL query parameters to s. opt
-// must be a struct whose fields may contain "url" tags.
-func addOptions(s string, opt interface{}) (string, error) {
-	v := reflect.ValueOf(opt)
-	if v.Kind() == reflect.Ptr && v.IsNil() {
-		return s, nil
-	}
-
-	u, err := url.Parse(s)
-	if err != nil {
-		return s, err
-	}
-
-	qs, err := query.Values(opt)
-	if err != nil {
-		return s, err
-	}
-
-	u.RawQuery = qs.Encode()
-	return u.String(), nil
 }
 
 // NewClient returns a new Domo API client. If a nil httpClient is
@@ -242,195 +201,4 @@ type Error struct {
 
 func (e Error) Error() string {
 	return e.Message
-}
-
-// decode an Error from an io.Reader.
-func (c *Client) decodeError(resp *http.Response) error {
-	responseBody, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	if len(responseBody) == 0 {
-		return fmt.Errorf("domo: HTTP %d: %s (body empty)", resp.StatusCode, http.StatusText(resp.StatusCode))
-	}
-
-	buf := bytes.NewBuffer(responseBody)
-
-	var e struct {
-		E Error `json:"error"`
-	}
-	err = json.NewDecoder(buf).Decode(&e)
-	if err != nil {
-		return fmt.Errorf("domo: HTTP %d. couldn't decode err: Length (%d) [%s]", resp.StatusCode, len(responseBody), responseBody)
-	}
-
-	if e.E.Message == "" {
-		e.E.Message = fmt.Sprintf("domo: unexpected HTTP %d: %s (empty error)",
-			resp.StatusCode, http.StatusText(resp.StatusCode))
-	}
-
-	return e.E
-}
-
-func shouldRetry(status int) bool {
-	return status == http.StatusAccepted || status == http.StatusTooManyRequests
-}
-
-func isFailure(code int, validCodes []int) bool {
-	for _, item := range validCodes {
-		if item == code {
-			return false
-		}
-	}
-	return true
-}
-
-// execute a non-GET request
-func (c *Client) execute(req *http.Request, result interface{}, needsStatus ...int) error {
-	for {
-		resp, err := c.http.Do(req)
-		if err != nil {
-			return err
-		}
-		defer resp.Body.Close()
-
-		if c.AutoRetry && shouldRetry(resp.StatusCode) {
-			time.Sleep(retryDuration(resp))
-			continue
-		}
-		if resp.StatusCode != http.StatusOK && isFailure(resp.StatusCode, needsStatus) {
-			return c.decodeError(resp)
-		}
-
-		if result != nil {
-			if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-				return err
-			}
-		}
-		break
-	}
-	return nil
-}
-func (c *Client) executeReq(req *http.Request, needsStatus ...int) (string, error) {
-	for {
-		resp, err := c.http.Do(req)
-		if err != nil {
-			return "", err
-		}
-		defer resp.Body.Close()
-
-		if c.AutoRetry && shouldRetry(resp.StatusCode) {
-			time.Sleep(retryDuration(resp))
-			continue
-		}
-		if resp.StatusCode != http.StatusOK && isFailure(resp.StatusCode, needsStatus) {
-			return "", c.decodeError(resp)
-		}
-
-		result, err := ioutil.ReadAll(resp.Body)
-		return string(result), err
-		break
-	}
-	return "", nil
-}
-
-func retryDuration(resp *http.Response) time.Duration {
-	raw := resp.Header.Get("Retry-After")
-	if raw == "" {
-		return defaultRetryDuration
-	}
-	seconds, err := strconv.ParseInt(raw, 10, 32)
-	if err != nil {
-		return defaultRetryDuration
-	}
-	return time.Duration(seconds) * time.Second
-}
-
-func (c *Client) get(url string, result interface{}) error {
-	for {
-		resp, err := c.http.Get(url)
-		if err != nil {
-			return err
-		}
-
-		defer resp.Body.Close()
-
-		if resp.StatusCode == rateLimitExceededStatusCode && c.AutoRetry {
-			time.Sleep(retryDuration(resp))
-			continue
-		}
-		if resp.StatusCode != http.StatusOK {
-			return c.decodeError(resp)
-		}
-
-		err = json.NewDecoder(resp.Body).Decode(result)
-		if err != nil {
-			return err
-		}
-
-		break
-	}
-
-	return nil
-}
-
-func (c *Client) getCSV(url string) (string, error) {
-	var s string
-	for {
-		resp, err := c.http.Get(url)
-		if err != nil {
-			return "", err
-		}
-
-		defer resp.Body.Close()
-
-		if resp.StatusCode == rateLimitExceededStatusCode && c.AutoRetry {
-			time.Sleep(retryDuration(resp))
-			continue
-		}
-		if resp.StatusCode != http.StatusOK {
-			return "", c.decodeError(resp)
-		}
-
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return "", err
-		}
-		s = string(b)
-
-		break
-	}
-
-	return s, nil
-}
-
-func (c *Client) getRespBody(url string) (string, error) {
-	var s string
-	for {
-		resp, err := c.http.Get(url)
-		if err != nil {
-			return "", err
-		}
-
-		defer resp.Body.Close()
-
-		if resp.StatusCode == rateLimitExceededStatusCode && c.AutoRetry {
-			time.Sleep(retryDuration(resp))
-			continue
-		}
-		if resp.StatusCode != http.StatusOK {
-			return "", c.decodeError(resp)
-		}
-
-		b, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			return "", err
-		}
-		s = string(b)
-
-		break
-	}
-
-	return s, nil
 }

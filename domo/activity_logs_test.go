@@ -1,11 +1,10 @@
 package domo
 
 import (
+	"bytes"
 	"context"
 	"flag"
 	"fmt"
-	"github.com/joho/godotenv"
-	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -14,7 +13,7 @@ import (
 func Test_generateAuditQueryUrlParams(t *testing.T) {
 	params := AuditQueryParams{User: "123", Start: 1, End: 2, Limit: 5, Offset: 1}
 	expected := "end=2&limit=5&offset=1&start=1&user=123" // It'll order params alphabetically
-	actual := generateAuditQueryUrlParams(params)
+	actual := generateAuditQueryURLParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
@@ -23,7 +22,7 @@ func Test_generateAuditQueryUrlParams(t *testing.T) {
 func Test_generateAuditQueryUrlParams_no_user_set(t *testing.T) {
 	params := AuditQueryParams{Start: 1, End: 2, Limit: 5, Offset: 1}
 	expected := "end=2&limit=5&offset=1&start=1" // It'll order params alphabetically
-	actual := generateAuditQueryUrlParams(params)
+	actual := generateAuditQueryURLParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
@@ -32,7 +31,7 @@ func Test_generateAuditQueryUrlParams_no_user_set(t *testing.T) {
 func Test_generateAuditQueryUrlParams_no_time_range_set(t *testing.T) {
 	params := AuditQueryParams{User: "123", Limit: 5, Offset: 1}
 	expected := "limit=5&offset=1&user=123" // It'll order params alphabetically
-	actual := generateAuditQueryUrlParams(params)
+	actual := generateAuditQueryURLParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
@@ -41,7 +40,7 @@ func Test_generateAuditQueryUrlParams_no_time_range_set(t *testing.T) {
 func Test_generateAuditQueryUrlParams_no_limit_set(t *testing.T) {
 	params := AuditQueryParams{User: "123", Start: 1, End: 2, Offset: 1}
 	expected := "end=2&limit=50&offset=1&start=1&user=123" // It'll order params alphabetically, default for limit is 50
-	actual := generateAuditQueryUrlParams(params)
+	actual := generateAuditQueryURLParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
@@ -49,7 +48,7 @@ func Test_generateAuditQueryUrlParams_no_limit_set(t *testing.T) {
 func Test_generateAuditQueryUrlParams_no_parameters_set(t *testing.T) {
 	params := AuditQueryParams{}
 	expected := "limit=50&offset=0" // default for limit is 50, default for offset is 0. It'll order params alphabetically
-	actual := generateAuditQueryUrlParams(params)
+	actual := generateAuditQueryURLParams(params)
 	if actual != expected {
 		t.Errorf("Expected URL params: %s\nFound URL params:  %s", expected, actual)
 	}
@@ -110,20 +109,19 @@ func Test_Entries_no_optional_params_Integration_Test(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as this file")
-		}
-
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
 		auth := NewAuthenticator(ScopeAudit)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		params := AuditQueryParams{} // No optional params
-		domoURL := fmt.Sprintf("%s/v1/audit?%s", client.baseURL, generateAuditQueryParamsString(params))
-		res, err := client.getRespBody(domoURL)
+		domoURL := fmt.Sprintf("v1/audit?%s", generateAuditQueryURLParams(params))
+		rq1, err := client.NewRequest("GET", domoURL, nil)
+		buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, buf)
+		res := buf.String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -146,20 +144,19 @@ func Test_LogEntries_Bad_User_ID_Integration_Test(t *testing.T) {
 	flag.Parse()
 	// *domod = true // uncomment if you want to debug without passing -domo flag
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as this file")
-		}
-
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
 		auth := NewAuthenticator(ScopeAudit)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		params := AuditQueryParams{User: "-123", Start: 1542211215000, End: 1542241576000} // Bad User ID
-		domoURL := fmt.Sprintf("%s/v1/audit?%s", client.baseURL, generateAuditQueryParamsString(params))
-		res, err := client.getRespBody(domoURL)
+		domoURL := fmt.Sprintf("v1/audit?%s", generateAuditQueryURLParams(params))
+		rq1, err := client.NewRequest("GET", domoURL, nil)
+		buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, buf)
+		res := buf.String()
 		// Bad User ID, so I would expect an Error, either StatusNotFound or StatusBadRequest
 		if err == nil {
 			t.Error(err)
@@ -180,21 +177,19 @@ func Test_LogEntries_time_range_params_only_Integration_Test(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as this file")
-		}
-
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
 		auth := NewAuthenticator(ScopeAudit)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		params := AuditQueryParams{Start: 1542211215000, End: 1542241576000} // Bad User ID
-		domoURL := fmt.Sprintf("%s/v1/audit?%s", client.baseURL, generateAuditQueryParamsString(params))
-		res, err := client.getRespBody(domoURL)
+		domoURL := fmt.Sprintf("v1/audit?%s", generateAuditQueryURLParams(params))
+		rq1, err := client.NewRequest("GET", domoURL, nil)
+		buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, buf)
+		res := buf.String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -217,22 +212,21 @@ func Test_Entries_User_ID_Param_Integration_Test(t *testing.T) {
 	// Don't run these integration tests unless the "domo" flag is passed. i.e. `go test -domo`
 	flag.Parse()
 	if *domod {
-		err := godotenv.Load()
-		if err != nil {
-			log.Fatal("Error loading .env file, make sure you've created one in the same directory as this file")
-		}
-
 		clientID := os.Getenv("DOMO_CLIENT_ID")
 		clientSecret := os.Getenv("DOMO_SECRET")
 		auth := NewAuthenticator(ScopeAudit)
 		auth.SetAuthInfo(clientID, clientSecret)
 		client := auth.NewClient()
+		ctx := context.Background()
 
 		TestUserID := "1704739518"
 
 		params := AuditQueryParams{User: TestUserID, Start: 1542211215000, End: 1542241576000} // Ryan's User ID
-		domoURL := fmt.Sprintf("%s/v1/audit?%s", client.baseURL, generateAuditQueryParamsString(params))
-		res, err := client.getRespBody(domoURL)
+		domoURL := fmt.Sprintf("v1/audit?%s", generateAuditQueryURLParams(params))
+		rq1, err := client.NewRequest("GET", domoURL, nil)
+		buf := new(bytes.Buffer)
+		_, err = client.Do(ctx, rq1, buf)
+		res := buf.String()
 		if err != nil {
 			t.Error(err)
 		}
@@ -240,7 +234,7 @@ func Test_Entries_User_ID_Param_Integration_Test(t *testing.T) {
 			t.Errorf("Expected no response got: %s", res)
 		}
 
-		userActivityLog, err := client.GetActivityLogEntries(params)
+		userActivityLog, _, err := client.Logs.Entries(ctx, params)
 		if err != nil {
 			t.Error(err)
 		}
