@@ -35,7 +35,7 @@ type StreamExecution struct {
 
 // StreamDatasetSchema describes the schema for a StreamDataset.
 type StreamDatasetSchema struct {
-	DatasetSchema *DatasetSchema `json:"schema,omitempty"`
+	DatasetSchema *DatasetSchema `json:"dataSet,omitempty"`
 	UpdateMethod  string         `json:"updateMethod,omitempty"`
 }
 
