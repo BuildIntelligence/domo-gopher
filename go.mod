@@ -1,4 +1,4 @@
-module gitlab.com/buildintelligence/domo-gopher
+module github.com/BuildIntelligence/domo-gopher/v2
 
 require (
 	github.com/golang/protobuf v1.3.2 // indirect

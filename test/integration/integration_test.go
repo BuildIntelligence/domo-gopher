@@ -1,4 +1,4 @@
-package domo
+package integration
 
 import (
 	"bytes"
@@ -8,7 +8,7 @@ import (
 	"os"
 	"testing"
 
-	"gitlab.com/buildintelligence/domo-gopher/domo"
+	"github.com/buildintelligence/domo-gopher/v2/domo"
 )
 
 var (

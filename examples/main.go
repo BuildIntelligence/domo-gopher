@@ -4,8 +4,9 @@ package main
 import (
 	"context"
 	"fmt"
-	"gitlab.com/buildintelligence/domo-gopher/domo"
 	"os"
+
+	"github.com/buildintelligence/domo-gopher/v2/domo"
 )
 
 func main() {
