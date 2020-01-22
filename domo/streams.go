@@ -16,7 +16,7 @@ const (
 // StreamDataset describes the Domo Dataset for a Domo Stream.
 type StreamDataset struct {
 	ID            int              `json:"id,omitempty"`
-	Dataset       *DatasetDetails  `json:"dataset,omitempty"`
+	Dataset       *Dataset         `json:"dataset,omitempty"`
 	UpdateMethod  string           `json:"updateMethod,omitempty"`
 	CreatedAt     string           `json:"createdAt,omitempty"`
 	ModifiedAt    string           `json:"modifiedAt,omitempty"`

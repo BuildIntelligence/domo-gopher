@@ -5,12 +5,280 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"reflect"
 	"testing"
 )
 
 const (
 	testDSName = "Test DomoGopher"
 )
+func Test_checkForSchemaChangeByColumnNameMatching(t *testing.T){
+	domo := Schema{Columns: []Column{{
+		ColumnType: "DECIMAL",
+		Name:       "Blah",
+	},{
+		ColumnType: "DATE",
+		Name:       "firstBlahDay",
+	},{
+		ColumnType: "DATETIME",
+		Name:       "firstBlahTime",
+	},{
+		ColumnType: "STRING",
+		Name:       "Foo",
+	},{
+		ColumnType: "LONG",
+		Name:       "bar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "baz",
+	},{
+		ColumnType: "LONG",
+		Name:       "BazBar",
+	},{
+		ColumnType: "LONG",
+		Name:       "obar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "obaz",
+	}}}
+
+	sample := GenerateDataSetSchema(reflect.TypeOf(DomoEmbeddedSample{}))
+
+	diffs := checkForSchemaChangeByColumnNameMatching(sample, domo)
+
+	if diffs.DiffsCount() > 0 {
+		t.Errorf("Unexpected Difference In Schema: %v", diffs)
+	}
+}
+
+func Test_checkForSchemaChangeByColumnNameMatching_addColumn(t *testing.T){
+	domo := Schema{Columns: []Column{{
+		ColumnType: "DECIMAL",
+		Name:       "Blah",
+	},{
+		ColumnType: "DATE",
+		Name:       "firstBlahDay",
+	},{
+		ColumnType: "DATETIME",
+		Name:       "firstBlahTime",
+	},{
+		ColumnType: "STRING",
+		Name:       "Foo",
+	},{
+		ColumnType: "LONG",
+		Name:       "bar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "baz",
+	},{
+		ColumnType: "LONG",
+		Name:       "BazBar",
+	},{
+		ColumnType: "LONG",
+		Name:       "obar",
+	}}}
+
+	sample := GenerateDataSetSchema(reflect.TypeOf(DomoEmbeddedSample{}))
+
+	diffs := checkForSchemaChangeByColumnNameMatching(sample, domo)
+
+	if diffs.DiffsCount() != 1 {
+		t.Errorf("Expected only 1 Difference In Schema, found %d: %v", diffs.DiffsCount(), diffs)
+	}
+	colToAdd := diffs.ColumnsToAddToDomo[0]
+	if colToAdd.ComparedColumnName != "obaz" {
+		t.Errorf("Expected to have column named %s to add, found %s", "obaz", colToAdd.ComparedColumnName)
+	}
+	if colToAdd.ComparedColumnType != ColumnTypeDouble {
+		t.Errorf("Expected to have column with type %s to add, found type %s", ColumnTypeDouble, colToAdd.ComparedColumnType)
+	}
+}
+
+func Test_checkForSchemaChangeByColumnNameMatching_addColumn_andChangeDataType(t *testing.T){
+	domo := Schema{Columns: []Column{{
+		ColumnType: "DECIMAL",
+		Name:       "Blah",
+	},{
+		ColumnType: "DATE",
+		Name:       "firstBlahDay",
+	},{
+		ColumnType: "DATETIME",
+		Name:       "firstBlahTime",
+	},{
+		ColumnType: "STRING",
+		Name:       "Foo",
+	},{
+		ColumnType: "LONG",
+		Name:       "bar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "baz",
+	},{
+		ColumnType: "STRING",
+		Name:       "BazBar",
+	},{
+		ColumnType: "LONG",
+		Name:       "obar",
+	}}}
+
+	sample := GenerateDataSetSchema(reflect.TypeOf(DomoEmbeddedSample{}))
+
+	diffs := checkForSchemaChangeByColumnNameMatching(sample, domo)
+
+	if diffs.DiffsCount() != 2 {
+		t.Errorf("Expected only 1 Difference In Schema, found %d: %v", diffs.DiffsCount(), diffs)
+	}
+	colToAdd := diffs.ColumnsToAddToDomo[0]
+	if colToAdd.ComparedColumnName != "obaz" {
+		t.Errorf("Expected to have column named %s to add, found %s", "obaz", colToAdd.ComparedColumnName)
+	}
+	if colToAdd.ComparedColumnType != ColumnTypeDouble {
+		t.Errorf("Expected to have column with type %s to add, found type %s", ColumnTypeDouble, colToAdd.ComparedColumnType)
+	}
+	colToChangeType := diffs.ColumnTypeMismatch[0]
+	if colToChangeType.DomoColumnName != "BazBar" {
+		t.Errorf("Expected to have a column data type change for column BazBar. Found column data type change for %s", colToChangeType.DomoColumnName)
+	}
+	if colToChangeType.ComparedColumnType == colToChangeType.DomoColumnType {
+		t.Errorf("Expected to have a mismatch between ComparedColumnType and DomoColumnType but both where %s", colToChangeType.ComparedColumnType)
+	}
+}
+
+func Test_checkForSchemaChangeByColumnNameMatching_deleteColumn(t *testing.T){
+	domo := Schema{Columns: []Column{{
+		ColumnType: "DECIMAL",
+		Name:       "Blah",
+	},{
+		ColumnType: "DATE",
+		Name:       "firstBlahDay",
+	},{
+		ColumnType: "DATETIME",
+		Name:       "firstBlahTime",
+	},{
+		ColumnType: "STRING",
+		Name:       "Foo",
+	},{
+		ColumnType: "LONG",
+		Name:       "bar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "baz",
+	},{
+		ColumnType: "LONG",
+		Name:       "BazBar",
+	},{
+		ColumnType: "LONG",
+		Name:       "obar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "obaz",
+	},{
+		ColumnType: "STRING",
+		Name:       "ColumnInDomoToDelete",
+	}}}
+
+	sample := GenerateDataSetSchema(reflect.TypeOf(DomoEmbeddedSample{}))
+
+	diffs := checkForSchemaChangeByColumnNameMatching(sample, domo)
+
+	if diffs.DiffsCount() != 1 {
+		t.Errorf("Expected only 1 Difference In Schema, found %d: %v", diffs.DiffsCount(), diffs)
+	}
+	colToDelete := diffs.ColumnsToDeleteFromDomo[0]
+	if colToDelete.DomoColumnName != "ColumnInDomoToDelete" {
+		t.Errorf("Expected to have column named %s to add, found %s", "ColumnInDomoToDelete", colToDelete.DomoColumnName)
+	}
+	if colToDelete.DomoColumnType != ColumnTypeString {
+		t.Errorf("Expected to have column with type %s to add, found type %s", ColumnTypeString, colToDelete.DomoColumnType)
+	}
+}
+
+func Test_checkForSchemaChangeByColumnIndexComparision(t *testing.T){
+	domo := Schema{Columns: []Column{{
+		ColumnType: "DECIMAL",
+		Name:       "Blah",
+	},{
+		ColumnType: "DATE",
+		Name:       "firstBlahDay",
+	},{
+		ColumnType: "DATETIME",
+		Name:       "firstBlahTime",
+	},{
+		ColumnType: "STRING",
+		Name:       "Foo",
+	},{
+		ColumnType: "LONG",
+		Name:       "bar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "baz",
+	},{
+		ColumnType: "LONG",
+		Name:       "BazBar",
+	},{
+		ColumnType: "LONG",
+		Name:       "obar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "obaz",
+	}}}
+
+	sample := GenerateDataSetSchema(reflect.TypeOf(DomoEmbeddedSample{}))
+
+	diffs := checkForSchemaChangeByColumnIndexComparision(sample, domo)
+
+	if diffs.DiffsCount() > 0 {
+		t.Errorf("Unexpected Difference In Schema: %v", diffs)
+	}
+
+}
+
+func Test_checkForSchemaChangeByColumnIndexComparision_Name_andType_Diff(t *testing.T){
+	domo := Schema{Columns: []Column{{
+		ColumnType: "DECIMAL",
+		Name:       "Blah",
+	},{
+		ColumnType: "DATE",
+		Name:       "firstBlahDay",
+	},{
+		ColumnType: "DATETIME",
+		Name:       "firstBlahTime",
+	},{
+		ColumnType: "STRING",
+		Name:       "Foo",
+	},{
+		ColumnType: "LONG",
+		Name:       "bar",
+	},{
+		ColumnType: "DOUBLE",
+		Name:       "baz",
+	},{
+		ColumnType: "LONG",
+		Name:       "BazBar",
+	},{
+		ColumnType: "LONG",
+		Name:       "obar",
+	},{
+		ColumnType: "DECIMAL",
+		Name:       "OBizzle",
+	}}}
+
+	sample := GenerateDataSetSchema(reflect.TypeOf(DomoEmbeddedSample{}))
+
+	diffs := checkForSchemaChangeByColumnIndexComparision(sample, domo)
+
+	if diffs.DiffsCount() != 2 {
+		t.Errorf("Unexpected number of Differences In Schema. Expected 2, found %d:\n%v", diffs.DiffsCount(), diffs)
+	}
+	nameDiff := diffs.NameMismatch[0]
+	if nameDiff.DomoColumnName == nameDiff.ComparedColumnName {
+		t.Errorf("Expected column names to be different. Found %s and %s", nameDiff.DomoColumnType, nameDiff.ComparedColumnName)
+	}
+	typeDiff := diffs.ColumnTypeMismatch[0]
+	if typeDiff.DomoColumnType == typeDiff.ComparedColumnType && typeDiff.ComparedColumnType != ColumnTypeDouble {
+		t.Errorf("Expected to have a change to %s. Found %s", ColumnTypeDouble, typeDiff.ComparedColumnType)
+	}
+}
 
 func TestDatasetsService_List(t *testing.T) {
 	clientID := os.Getenv("DOMO_CLIENT_ID")
@@ -66,8 +334,7 @@ func TestDatasetsService_Create(t *testing.T) {
 		ctx := context.Background()
 
 		columns := []Column{Column{ColumnType: "STRING", Name: "Test Col String"}, Column{ColumnType: "STRING", Name: "Test Col String 2"}}
-		ds := DatasetDetails{Name: testDSName, Description: "TestDomoGopherDatasetCreate", Rows: 0, Schema: Schema{Columns: columns}}
-
+		ds := Dataset{Name: testDSName, Description: "TestDomoGopherDatasetCreate", Rows: 0, Schema: Schema{Columns: columns}}
 		dataset, _, err := client.Datasets.Create(ctx, ds)
 		if err != nil {
 			t.Errorf("Unexpected Error Creating Dataset: %s", err)
