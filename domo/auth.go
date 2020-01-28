@@ -23,6 +23,9 @@ const (
 	ScopeAudit = "audit"
 	// ScopeDashboard marks OAuth2 Scope for Pages API.
 	ScopeDashboard = "dashboard"
+	ScopeAccount = "account"
+	ScopeBuzz = "buzz"
+	ScopeWorkflow = "workflow"
 )
 
 // Authenticator makes it easy to configure authentication
