@@ -17,7 +17,7 @@ import (
 )
 
 // Version is the version of this lib.
-const Version = "2.0.1"
+const Version = "2.0.2"
 
 const (
 	defaultBaseURL = "https://api.domo.com/"
@@ -114,7 +114,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	}
 
 	if body != nil {
-		req.Header.Set("Content-Type", "applicatin/json")
+		req.Header.Set("Content-Type", "application/json")
 	}
 	req.Header.Set("Accept", "application/json")
 	if c.UserAgent != "" {
