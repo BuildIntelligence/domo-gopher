@@ -5,10 +5,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/BuildIntelligence/domo-gopher/v2/domo"
 	"os"
 	"testing"
 
-	"github.com/buildintelligence/domo-gopher/v2/domo"
 )
 
 var (

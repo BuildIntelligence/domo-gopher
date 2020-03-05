@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/buildintelligence/domo-gopher/v2/domo"
+	"github.com/BuildIntelligence/domo-gopher/v2/domo"
 )
 
 func main() {
