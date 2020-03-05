@@ -51,6 +51,7 @@ type Client struct {
 	Groups   *GroupsService
 	Pages    *PagesService
 	Logs     *ActivityLogsService
+	Accounts *AccountsService
 }
 
 type service struct {
@@ -75,6 +76,7 @@ func NewClient(httpClient *http.Client) *Client {
 	c.Groups = (*GroupsService)(&c.common)
 	c.Pages = (*PagesService)(&c.common)
 	c.Logs = (*ActivityLogsService)(&c.common)
+	c.Accounts = (*AccountsService)(&c.common)
 
 	return c
 }
@@ -153,7 +155,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 
 		return nil, err
 	}
-	defer resp.Body.Close()
+	//defer resp.Body.Close()
 	err = CheckResponse(resp)
 	if err != nil {
 		return resp, err

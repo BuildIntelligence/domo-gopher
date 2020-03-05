@@ -12,32 +12,33 @@ import (
 const (
 	testDSName = "Test DomoGopher"
 )
-func Test_checkForSchemaChangeByColumnNameMatching(t *testing.T){
+
+func Test_checkForSchemaChangeByColumnNameMatching(t *testing.T) {
 	domo := Schema{Columns: []Column{{
 		ColumnType: "DECIMAL",
 		Name:       "Blah",
-	},{
+	}, {
 		ColumnType: "DATE",
 		Name:       "firstBlahDay",
-	},{
+	}, {
 		ColumnType: "DATETIME",
 		Name:       "firstBlahTime",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "Foo",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "bar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "baz",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "BazBar",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "obar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "obaz",
 	}}}
@@ -51,29 +52,29 @@ func Test_checkForSchemaChangeByColumnNameMatching(t *testing.T){
 	}
 }
 
-func Test_checkForSchemaChangeByColumnNameMatching_addColumn(t *testing.T){
+func Test_checkForSchemaChangeByColumnNameMatching_addColumn(t *testing.T) {
 	domo := Schema{Columns: []Column{{
 		ColumnType: "DECIMAL",
 		Name:       "Blah",
-	},{
+	}, {
 		ColumnType: "DATE",
 		Name:       "firstBlahDay",
-	},{
+	}, {
 		ColumnType: "DATETIME",
 		Name:       "firstBlahTime",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "Foo",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "bar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "baz",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "BazBar",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "obar",
 	}}}
@@ -94,29 +95,29 @@ func Test_checkForSchemaChangeByColumnNameMatching_addColumn(t *testing.T){
 	}
 }
 
-func Test_checkForSchemaChangeByColumnNameMatching_addColumn_andChangeDataType(t *testing.T){
+func Test_checkForSchemaChangeByColumnNameMatching_addColumn_andChangeDataType(t *testing.T) {
 	domo := Schema{Columns: []Column{{
 		ColumnType: "DECIMAL",
 		Name:       "Blah",
-	},{
+	}, {
 		ColumnType: "DATE",
 		Name:       "firstBlahDay",
-	},{
+	}, {
 		ColumnType: "DATETIME",
 		Name:       "firstBlahTime",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "Foo",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "bar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "baz",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "BazBar",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "obar",
 	}}}
@@ -144,35 +145,35 @@ func Test_checkForSchemaChangeByColumnNameMatching_addColumn_andChangeDataType(t
 	}
 }
 
-func Test_checkForSchemaChangeByColumnNameMatching_deleteColumn(t *testing.T){
+func Test_checkForSchemaChangeByColumnNameMatching_deleteColumn(t *testing.T) {
 	domo := Schema{Columns: []Column{{
 		ColumnType: "DECIMAL",
 		Name:       "Blah",
-	},{
+	}, {
 		ColumnType: "DATE",
 		Name:       "firstBlahDay",
-	},{
+	}, {
 		ColumnType: "DATETIME",
 		Name:       "firstBlahTime",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "Foo",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "bar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "baz",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "BazBar",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "obar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "obaz",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "ColumnInDomoToDelete",
 	}}}
@@ -193,32 +194,32 @@ func Test_checkForSchemaChangeByColumnNameMatching_deleteColumn(t *testing.T){
 	}
 }
 
-func Test_checkForSchemaChangeByColumnIndexComparision(t *testing.T){
+func Test_checkForSchemaChangeByColumnIndexComparision(t *testing.T) {
 	domo := Schema{Columns: []Column{{
 		ColumnType: "DECIMAL",
 		Name:       "Blah",
-	},{
+	}, {
 		ColumnType: "DATE",
 		Name:       "firstBlahDay",
-	},{
+	}, {
 		ColumnType: "DATETIME",
 		Name:       "firstBlahTime",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "Foo",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "bar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "baz",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "BazBar",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "obar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "obaz",
 	}}}
@@ -233,32 +234,32 @@ func Test_checkForSchemaChangeByColumnIndexComparision(t *testing.T){
 
 }
 
-func Test_checkForSchemaChangeByColumnIndexComparision_Name_andType_Diff(t *testing.T){
+func Test_checkForSchemaChangeByColumnIndexComparision_Name_andType_Diff(t *testing.T) {
 	domo := Schema{Columns: []Column{{
 		ColumnType: "DECIMAL",
 		Name:       "Blah",
-	},{
+	}, {
 		ColumnType: "DATE",
 		Name:       "firstBlahDay",
-	},{
+	}, {
 		ColumnType: "DATETIME",
 		Name:       "firstBlahTime",
-	},{
+	}, {
 		ColumnType: "STRING",
 		Name:       "Foo",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "bar",
-	},{
+	}, {
 		ColumnType: "DOUBLE",
 		Name:       "baz",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "BazBar",
-	},{
+	}, {
 		ColumnType: "LONG",
 		Name:       "obar",
-	},{
+	}, {
 		ColumnType: "DECIMAL",
 		Name:       "OBizzle",
 	}}}
@@ -347,4 +348,34 @@ func TestDatasetsService_Create(t *testing.T) {
 			t.Errorf("Expected created dataset to have the name: %s but got: %s", testDSName, dataset.Name)
 		}
 	}
+}
+
+func TestDatasetsService_DownloadDatasetCSV(t *testing.T) {
+	// if the -short flag is passed this will be skipped. Since this requires a flag to be
+	// passed everytime I added an opt in flag to actually run these.
+	// This -short flag will help out with the UI in some IDEs though so I have both despite the redundancy.
+	// if testing.Short() {
+	// 	t.Skip()
+	// }
+	// Don't run these integration tests unless the "domoGopher" flag is passed. i.e. `go test -domo`
+	// flag.Parse()
+	// if *domogopher {
+	clientID := os.Getenv("DOMO_CLIENT_ID")
+	clientSecret := os.Getenv("DOMO_SECRET")
+	auth := NewAuthenticator(ScopeData)
+	auth.SetAuthInfo(clientID, clientSecret)
+	client := auth.NewClient()
+	ctx := context.Background()
+
+	// ds_id := "8ef52283-a1ee-4890-a17d-241b149f2d9f"
+	ds_id2 := "b6d07391-0887-4247-9b1e-43089559816f"
+	dataset, _, err := client.Datasets.DownloadDatasetCSV(ctx, ds_id2, false)
+	if err != nil {
+		t.Errorf("Unexpected Error Creating Dataset: %s", err)
+	}
+	if len(dataset) == 0 {
+		t.Errorf("Expected to have a dataset CSV returned with more than 0 length. Got dataset id: %s", dataset)
+	}
+	fmt.Printf("Dataset:\n%s\n", dataset)
+	// }
 }
