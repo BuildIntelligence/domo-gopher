@@ -501,7 +501,8 @@ func (s *DatasetsService) DownloadDatasetCSV(ctx context.Context, id string, inc
 	return csv, resp, nil
 }
 
-// QueryData takes a sql query and uses it to return a string csv of the query table results for the dataset.
+// QueryData takes a sql query and uses it to return a json string of the query table results for the dataset.
+// see https://developer.domo.com/docs/dataset-api-reference/dataset#Query%20a%20DataSet for an example response.
 func (s *DatasetsService) QueryData(ctx context.Context, id, sqlQuery string) (string, *http.Response, error) {
 	u := fmt.Sprintf("v1/datasets/query/execute/%s", id)
 	b := struct {
@@ -511,7 +512,10 @@ func (s *DatasetsService) QueryData(ctx context.Context, id, sqlQuery string) (s
 	if err != nil {
 		return "", nil, err
 	}
-	req.Header.Set("Accept", "text/csv")
+
+	// This API endpoint doesn't return a CSV, but it returns a JSON object with the query results and some metadata.
+	// see https://developer.domo.com/docs/dataset-api-reference/dataset#Query%20a%20DataSet for an example response.
+	req.Header.Set("Accept", "application/json")
 
 	buf := new(bytes.Buffer)
 	resp, err := s.client.Do(ctx, req, nil)

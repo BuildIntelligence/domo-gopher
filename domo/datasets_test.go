@@ -306,8 +306,8 @@ func TestDatasetsService_QueryData(t *testing.T) {
 	client := auth.NewClient()
 	ctx := context.Background()
 
-	sqlQuery := fmt.Sprintf("SELECT %s FROM table WHERE `WMS Community`='%s'", "`Lot No. for Community Maps`, `Sales Status Series for Community Map`, `Sales Status`", "ABM")
-	data, _, err := client.Datasets.QueryData(ctx, "447a2858-9c1c-42a9-b90b-a5340268d90e", sqlQuery)
+	sqlQuery := fmt.Sprintf("SELECT %s FROM table WHERE `GL Account No.`=%s", "`GL Account No.`, `Category`", "1000")
+	data, _, err := client.Datasets.QueryData(ctx, "5a60b561-7030-42fa-a8f6-d04ddbe89864", sqlQuery)
 	if err != nil {
 		t.Errorf("Unexpected Error Retrieving Data: %s", err)
 	}
